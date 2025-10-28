@@ -1,0 +1,58 @@
+import { Brand } from '@/types/brand'
+
+export const mockBrands: Brand[] = [
+  {
+    _id: '1',
+    name: 'Apple',
+    slug: 'apple',
+    logoUrl: '/images/brands/apple.png',
+    country: 'Mỹ',
+    description: 'Hãng công nghệ hàng đầu thế giới, nổi tiếng với iPhone và MacBook.',
+    websiteUrl: 'https://www.apple.com',
+  },
+  {
+    _id: '2',
+    name: 'Samsung',
+    slug: 'samsung',
+    logoUrl: '/images/brands/samsung.png',
+    country: 'Hàn Quốc',
+    description: 'Tập đoàn điện tử lớn nhất Hàn Quốc, chuyên sản xuất smartphone và TV.',
+    websiteUrl: 'https://www.samsung.com',
+  },
+  {
+    _id: '3',
+    name: 'Asus',
+    slug: 'asus',
+    logoUrl: '/images/brands/asus.png',
+    country: 'Đài Loan',
+    description: 'Nhà sản xuất laptop và linh kiện máy tính nổi tiếng toàn cầu.',
+    websiteUrl: 'https://www.asus.com',
+  },
+  {
+    _id: '4',
+    name: 'Dell',
+    slug: 'dell',
+    logoUrl: '/images/brands/dell.png',
+    country: 'Mỹ',
+    description: 'Chuyên cung cấp máy tính và thiết bị văn phòng chuyên nghiệp.',
+    websiteUrl: 'https://www.dell.com',
+  },
+  {
+    _id: '5',
+    name: 'Sony',
+    slug: 'sony',
+    logoUrl: '/images/brands/sony.png',
+    country: 'Nhật Bản',
+    description: 'Tập đoàn đa quốc gia chuyên về điện tử, game, âm nhạc và phim ảnh.',
+    websiteUrl: 'https://www.sony.com',
+  },
+  {
+    _id: '6',
+    name: 'Xiaomi',
+    slug: 'xiaomi',
+    logoUrl: '/images/brands/xiaomi.png',
+    country: 'Trung Quốc',
+    description: 'Nhà sản xuất smartphone và thiết bị IoT phổ biến với giá thành hợp lý.',
+    websiteUrl: 'https://www.mi.com',
+  },
+]
