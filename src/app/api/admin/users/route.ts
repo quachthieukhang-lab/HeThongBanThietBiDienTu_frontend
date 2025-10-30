@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import axios from 'axios';
 
-const BASE_URL = 'http://localhost:3000/users'; // hoặc process.env.NEXT_PUBLIC_BACKEND_URL
+const BASE_URL = 'http://localhost:3000/users';
 
 // Lấy danh sách người dùng
 export async function GET() {
@@ -9,7 +9,7 @@ export async function GET() {
     const response = await axios.get(BASE_URL);
     return NextResponse.json(response.data);
   } catch (error) {
-    console.error('❌ GET /users failed:', error);
+    console.error('GET /users failed:', error);
     return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 });
   }
 }
@@ -21,7 +21,7 @@ export async function POST(req: Request) {
     const response = await axios.post(BASE_URL, body);
     return NextResponse.json(response.data, { status: 201 });
   } catch (error) {
-    console.error('❌ POST /users failed:', error);
+    console.error('POST /users failed:', error);
     return NextResponse.json({ error: 'Failed to create user' }, { status: 500 });
   }
 }
