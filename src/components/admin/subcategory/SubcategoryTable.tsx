@@ -61,7 +61,7 @@ export default function SubcategoryTable({
 
                   <td className="px-4 py-3 font-medium">{s.name}</td>
                   <td className="px-4 py-3 text-gray-600">{s.slug}</td>
-                  <td className="px-4 py-3">{s.category?.name ?? s.categoryName ?? '—'}</td>
+                  <td className="px-4 py-3">{s.categoryId?.name ?? s.categoryName ?? '—'}</td>
                   <td className="px-4 py-3 text-center">
                     {s.isActive ? (
                       <span className="inline-block px-2 py-1 text-xs font-semibold bg-green-100 text-green-700 rounded-full">
