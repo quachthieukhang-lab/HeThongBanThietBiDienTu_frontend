@@ -1,55 +1,76 @@
-'use client';
-import { Flex, Text, Button, DropdownMenu } from "@radix-ui/themes";
-import { useState } from "react";
+'use client'
 
-export default function Home() {
-  const [submitCount, setSubmitCount] = useState(0);
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import toast from 'react-hot-toast'
+
+export default function AdminLoginPage() {
+  const router = useRouter()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  const handleLogin = async (e: any) => {
+    e.preventDefault()
+    setLoading(true)
+    try {
+      const res = await fetch('http://localhost:3000/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+
+      if (!res.ok) throw new Error(await res.text())
+      const data = await res.json()
+
+      localStorage.setItem('access_token', data.accessToken)
+      localStorage.setItem('refresh_token', data.refreshToken)
+
+      toast.success('Đăng nhập thành công!')
+      router.push('/admin/dashboard')
+    } catch (err) {
+      toast.error('Đăng nhập thất bại!')
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
-    <Flex direction="column" gap="2" align="center" justify="center" className="min-h-screen " >
-      <Text size="5" weight="bold">Hello from Radix Themes</Text>
-      <Button
-        className=" bg-blue-500 text-white hover:bg-blue-600"
-        onClick={() => setSubmitCount(submitCount + 1)}
-        variant="solid"
-        size="3"
+    <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <form
+        onSubmit={handleLogin}
+        className="bg-white p-8 rounded-2xl shadow-lg w-96"
       >
-        Click me
-      </Button>
-      <DropdownMenu.Root>
-        <DropdownMenu.Trigger>
-          <Button variant="soft">
-            Options
-            <DropdownMenu.TriggerIcon />
-          </Button>
-        </DropdownMenu.Trigger>
-        <DropdownMenu.Content>
-          <DropdownMenu.Item shortcut="⌘ E">Edit</DropdownMenu.Item>
-          <DropdownMenu.Item shortcut="⌘ D">Duplicate</DropdownMenu.Item>
-          <DropdownMenu.Separator />
-          <DropdownMenu.Item shortcut="⌘ N">Archive</DropdownMenu.Item>
-
-          <DropdownMenu.Sub>
-            <DropdownMenu.SubTrigger>More</DropdownMenu.SubTrigger>
-            <DropdownMenu.SubContent>
-              <DropdownMenu.Item>Move to project…</DropdownMenu.Item>
-              <DropdownMenu.Item>Move to folder…</DropdownMenu.Item>
-
-              <DropdownMenu.Separator />
-              <DropdownMenu.Item>Advanced options…</DropdownMenu.Item>
-            </DropdownMenu.SubContent>
-          </DropdownMenu.Sub>
-
-          <DropdownMenu.Separator />
-          <DropdownMenu.Item>Share</DropdownMenu.Item>
-          <DropdownMenu.Item>Add to favorites</DropdownMenu.Item>
-          <DropdownMenu.Separator />
-          <DropdownMenu.Item shortcut="⌘ ⌫" color="red">
-            Delete
-          </DropdownMenu.Item>
-        </DropdownMenu.Content>
-      </DropdownMenu.Root>
-      <Text>Submit count: {submitCount}</Text>
-    </Flex>
-  );
+        <h2 className="text-2xl font-semibold mb-6 text-center">Đăng nhập Admin</h2>
+        <div className="mb-4">
+          <label className="block text-sm mb-1">Email</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full border px-3 py-2 rounded-lg"
+            required
+          />
+        </div>
+        <div className="mb-6">
+          <label className="block text-sm mb-1">Mật khẩu</label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full border px-3 py-2 rounded-lg"
+            required
+          />
+        </div>
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
+        >
+          {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+        </button>
+      </form>
+    </div>
+  )
 }

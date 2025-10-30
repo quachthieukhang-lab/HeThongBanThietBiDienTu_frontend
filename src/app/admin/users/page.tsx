@@ -6,6 +6,8 @@ import AddUserModal from '@/components/admin/user/AddUserModal';
 import UpdateUserModal from '@/components/admin/user/UpdateUserModal';
 import { PlusCircle, Search } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
+import { apiFetch } from '@/lib/api';
+import bcrypt from 'bcryptjs'
 
 export default function UsersPage() {
   const [users, setUsers] = useState<any[]>([]);
@@ -16,11 +18,13 @@ export default function UsersPage() {
 
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000';
 
+  // 🧩 Load danh sách người dùng
   const loadUsers = async () => {
     try {
-      const res = await fetch(`${backendUrl}/users?search=${encodeURIComponent(search)}`, {
+      const res = await apiFetch(`${backendUrl}/users?search=${encodeURIComponent(search)}`, {
         cache: 'no-store',
       });
+      if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
       setUsers(Array.isArray(data) ? data : data.users || []);
     } catch (error) {
@@ -33,29 +37,50 @@ export default function UsersPage() {
     loadUsers();
   }, [search]);
 
-  // Thêm người dùng mới
-  const handleAdd = async (user: any) => {
-    try {
-      const res = await fetch(`${backendUrl}/users`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...user, roles: [user.role] }),
-      });
-      if (!res.ok) throw new Error(await res.text());
-      const newUser = await res.json();
-      setUsers((prev) => [...prev, newUser]);
-      setIsAddOpen(false);
-      toast.success('Thêm người dùng thành công!');
-    } catch (error: any) {
-      console.error(error);
-      toast.error(error?.message || 'Thêm người dùng thất bại');
-    }
-  };
+  // 🧩 Thêm người dùng mới
+  const handleAdd = async (form: any) => {
+  try {
+    const token = localStorage.getItem('access_token');
+    console.log('Access Token gửi đi:', token);
 
-  // Xóa user
+    const passwordHash = await bcrypt.hash(form.password, 10);
+    if (!token) throw new Error('Bạn chưa đăng nhập!');
+    console.log('Form gửi đi:', form);
+    const res = await fetch(`${backendUrl}/users`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`, // gửi accessToken
+      },
+      body: JSON.stringify({
+        name: form.name,
+        email: form.email,
+        password: form.password, // cần ít nhất 6 ký tự
+        passwordHash,
+        phone: form.phone,
+        roles: [form.role],
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(err);
+    }
+
+    const newUser = await res.json();
+    setUsers((prev) => [...prev, newUser]);
+    setIsAddOpen(false);
+    toast.success('Thêm người dùng thành công!');
+  } catch (error: any) {
+    console.error('Lỗi thêm người dùng:', error);
+    toast.error(error?.message || 'Thêm người dùng thất bại');
+  }
+};
+
+  // 🧩 Xóa user
   const handleDelete = async (id: string) => {
     try {
-      const res = await fetch(`${backendUrl}/users/${id}`, { method: 'DELETE' });
+      const res = await apiFetch(`${backendUrl}/users/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error(await res.text());
       setUsers((prev) =>
         prev.map((u) => (u._id === id ? { ...u, status: 'deleted' } : u))
@@ -67,19 +92,13 @@ export default function UsersPage() {
     }
   };
 
-// Khôi phục user
+  // 🧩 Khôi phục user
   const handleRestore = async (id: string) => {
     try {
-      const res = await fetch(`${backendUrl}/users/${id}/restore`, {
-        method: 'POST', // ✅ sửa lại đúng method với BE
-        headers: { 'Content-Type': 'application/json' },
+      const res = await apiFetch(`${backendUrl}/users/${id}/restore`, {
+        method: 'POST',
       });
-
-      if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(errorText || 'Khôi phục thất bại');
-      }
-
+      if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
 
       setUsers((prev) =>

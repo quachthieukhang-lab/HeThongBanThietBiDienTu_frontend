@@ -13,7 +13,7 @@ export async function GET(
     const response = await axios.get(`${BASE_URL}/${id}`);
     return NextResponse.json(response.data);
   } catch (error) {
-    console.error('❌ GET /users/:id failed:', error);
+    console.error('GET /users/:id failed:', error);
     return NextResponse.json({ error: 'Failed to fetch user' }, { status: 500 });
   }
 }
@@ -30,7 +30,7 @@ export async function PATCH(
     const response = await axios.patch(`${BASE_URL}/${id}`, body);
     return NextResponse.json(response.data);
   } catch (error) {
-    console.error('❌ PATCH /users/:id failed:', error);
+    console.error('PATCH /users/:id failed:', error);
     return NextResponse.json({ error: 'Failed to update user' }, { status: 500 });
   }
 }
@@ -45,7 +45,7 @@ export async function DELETE(
     await axios.delete(`${BASE_URL}/${id}`);
     return NextResponse.json({ message: 'User deleted' });
   } catch (error) {
-    console.error('❌ DELETE /users/:id failed:', error);
+    console.error('DELETE /users/:id failed:', error);
     return NextResponse.json({ error: 'Failed to delete user' }, { status: 500 });
   }
 }

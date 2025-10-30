@@ -1,10 +1,10 @@
 'use client'
 
-import React, { ReactNode } from 'react'
+import React, { ReactNode, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Avatar, AvatarFallback } from '@radix-ui/react-avatar'
-import { LayoutDashboard, BarChart3, Users, Boxes, Package, Tag, Star, Gift } from 'lucide-react'
+import { LayoutDashboard, BarChart3, Users, Boxes, Package, Tag, Star, Gift, ChevronDown, ChevronRight } from 'lucide-react'
 
 interface AdminLayoutProps {
   children: ReactNode
@@ -12,12 +12,16 @@ interface AdminLayoutProps {
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname()
+  const [openCategoryMenu, setOpenCategoryMenu] = useState(false)
 
   const links = [
     { label: 'Trang Chủ', href: '/admin/dashboard', icon: <LayoutDashboard size={18} /> },
     { label: 'Báo Cáo Thống Kê', href: '/admin/reports', icon: <BarChart3 size={18} /> },
     { label: 'Người Dùng', href: '/admin/users', icon: <Users size={18} /> },
-    { label: 'Danh Mục Sản Phẩm', href: '/admin/categories', icon: <Boxes size={18} /> },
+    { label: 'Danh Mục Sản Phẩm', href: '/admin/categories', icon: <Boxes size={18} />, sub: [
+      { label: 'Danh mục chính', href: '/admin/categories' },
+      { label: 'Danh mục con', href: '/admin/subcategories' },
+    ]},
     { label: 'Gói Dịch Vụ Sản Phẩm', href: '/admin/packages', icon: <Package size={18} /> },
     { label: 'Quản Lý Đơn Hàng', href: '/admin/orders', icon: <Tag size={18} /> },
     { label: 'Thương Hiệu', href: '/admin/brands', icon: <Star size={18} /> },
@@ -36,9 +40,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             <p className="text-xs uppercase tracking-wider text-white/70 mb-3">Tổng Quan</p>
             {links.slice(0, 2).map(link => (
               <Link key={link.href} href={link.href}>
-                <div className={`flex items-center gap-3 px-4 py-2 rounded-lg cursor-pointer transition ${
-                  pathname === link.href ? 'bg-white/20 font-semibold' : 'hover:bg-white/10'
-                }`}>
+                <div
+                  className={`flex items-center gap-3 px-4 py-2 rounded-lg cursor-pointer transition ${
+                    pathname === link.href ? 'bg-white/20 font-semibold' : 'hover:bg-white/10'
+                  }`}
+                >
                   {link.icon}
                   <span>{link.label}</span>
                 </div>
@@ -46,15 +52,59 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             ))}
 
             <p className="text-xs uppercase tracking-wider text-white/70 mt-6 mb-3">Quản Lý</p>
+
             {links.slice(2).map(link => (
-              <Link key={link.href} href={link.href}>
-                <div className={`flex items-center gap-3 px-4 py-2 rounded-lg cursor-pointer transition ${
-                  pathname === link.href ? 'bg-white/20 font-semibold' : 'hover:bg-white/10'
-                }`}>
-                  {link.icon}
-                  <span>{link.label}</span>
-                </div>
-              </Link>
+              <div key={link.href}>
+                {/* Nếu có submenu */}
+                {link.sub ? (
+                  <>
+                    <div
+                      onClick={() => setOpenCategoryMenu(p => !p)}
+                      className={`flex items-center justify-between px-4 py-2 rounded-lg cursor-pointer transition ${
+                        pathname.startsWith('/admin/categories') ||
+                        pathname.startsWith('/admin/subcategories')
+                          ? 'bg-white/20 font-semibold'
+                          : 'hover:bg-white/10'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        {link.icon}
+                        <span>{link.label}</span>
+                      </div>
+                      {openCategoryMenu ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                    </div>
+
+                    {openCategoryMenu && (
+                      <div className="ml-10 mt-1 space-y-1">
+                        {link.sub.map(sub => (
+                          <Link key={sub.href} href={sub.href}>
+                            <div
+                              className={`px-3 py-1.5 rounded-lg text-sm transition ${
+                                pathname === sub.href
+                                  ? 'bg-white/20 font-semibold'
+                                  : 'hover:bg-white/10'
+                              }`}
+                            >
+                              {sub.label}
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <Link href={link.href}>
+                    <div
+                      className={`flex items-center gap-3 px-4 py-2 rounded-lg cursor-pointer transition ${
+                        pathname === link.href ? 'bg-white/20 font-semibold' : 'hover:bg-white/10'
+                      }`}
+                    >
+                      {link.icon}
+                      <span>{link.label}</span>
+                    </div>
+                  </Link>
+                )}
+              </div>
             ))}
           </nav>
 
@@ -76,9 +126,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 ml-72 p-6 min-h-screen">
-        {children}
-      </main>
+      <main className="flex-1 ml-72 p-6 min-h-screen">{children}</main>
     </div>
   )
 }

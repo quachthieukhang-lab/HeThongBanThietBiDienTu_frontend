@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
+import { apiFetch } from '@/lib/api';
 
 interface UpdateUserModalProps {
   user: any;
@@ -44,11 +45,11 @@ export default function UpdateUserModal({
 
     setLoading(true);
     try {
-      const res = await fetch(`${backendUrl}/users/${user._id}`, {
+      const res = await apiFetch(`${backendUrl}/users/${user._id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: form.name, phone: form.phone, roles: [form.role] }),
       });
+
 
       if (!res.ok) throw new Error(await res.text());
       const updatedUser = await res.json();
