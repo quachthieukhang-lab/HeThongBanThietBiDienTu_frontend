@@ -28,7 +28,6 @@ export default function CategoryModal({
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [previewBanner, setPreviewBanner] = useState<string | null>(null)
 
-  // --- Load dữ liệu khi chỉnh sửa ---
   useEffect(() => {
     if (editing) {
       setForm({
@@ -63,7 +62,6 @@ export default function CategoryModal({
     }
   }, [editing, open])
 
-  // --- Xử lý input text/number ---
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target as any
     setForm(prev => ({
@@ -72,22 +70,18 @@ export default function CategoryModal({
     }))
   }
 
-  // --- Xử lý file ---
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null
     setImageFile(file)
-    if (file) setPreviewImage(URL.createObjectURL(file))
-    else setPreviewImage(null)
+    setPreviewImage(file ? URL.createObjectURL(file) : null)
   }
 
   const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null
     setBannerFile(file)
-    if (file) setPreviewBanner(URL.createObjectURL(file))
-    else setPreviewBanner(null)
+    setPreviewBanner(file ? URL.createObjectURL(file) : null)
   }
 
-  // --- Gửi form ---
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.name || form.name.trim().length === 0) return alert('Tên bắt buộc')
@@ -101,6 +95,7 @@ export default function CategoryModal({
     if (form.path) formData.append('path', form.path)
     if (form.metaTitle) formData.append('metaTitle', form.metaTitle)
     if (form.metaDescription) formData.append('metaDescription', form.metaDescription)
+
     if (imageFile) formData.append('image', imageFile)
     if (bannerFile) formData.append('banner', bannerFile)
 
@@ -113,7 +108,6 @@ export default function CategoryModal({
     }
   }
 
-  // --- Giao diện ---
   return (
     <Dialog.Root open={open} onOpenChange={onClose}>
       <Dialog.Portal>
@@ -123,7 +117,6 @@ export default function CategoryModal({
                      -translate-x-1/2 -translate-y-1/2 bg-white
                      rounded-2xl p-6 shadow-2xl max-h-[90vh] overflow-auto"
         >
-          {/* Header */}
           <div className="flex items-center justify-between mb-4">
             <Dialog.Title className="text-lg font-semibold">
               {editing ? 'Sửa Category' : 'Tạo Category'}
@@ -135,9 +128,7 @@ export default function CategoryModal({
             </Dialog.Close>
           </div>
 
-          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-3">
-            {/* Dòng 1 */}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-sm font-medium">Tên*</label>
@@ -159,7 +150,6 @@ export default function CategoryModal({
               </div>
             </div>
 
-            {/* Dòng 2 */}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-sm font-medium">Sort Order</label>
@@ -187,7 +177,6 @@ export default function CategoryModal({
               </div>
             </div>
 
-            {/* Description */}
             <div>
               <label className="text-sm font-medium">Description</label>
               <textarea
@@ -199,7 +188,6 @@ export default function CategoryModal({
               />
             </div>
 
-            {/* Ảnh */}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-sm font-medium">Image</label>
@@ -217,7 +205,6 @@ export default function CategoryModal({
               </div>
             </div>
 
-            {/* SEO */}
             <div>
               <label className="text-sm font-medium">Path (SEO)</label>
               <input
@@ -227,6 +214,7 @@ export default function CategoryModal({
                 className="w-full border rounded px-3 py-2"
               />
             </div>
+
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-sm font-medium">Meta Title</label>
@@ -248,7 +236,6 @@ export default function CategoryModal({
               </div>
             </div>
 
-            {/* Nút */}
             <div className="flex justify-end gap-3 mt-5">
               <Dialog.Close asChild>
                 <button type="button" className="px-4 py-2 rounded border hover:bg-gray-100">

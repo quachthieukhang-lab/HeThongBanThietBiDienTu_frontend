@@ -4,107 +4,97 @@ import React, { useEffect, useState } from 'react'
 import { PlusCircle, Search } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { apiFetch } from '@/lib/api'
-import SubcategoryTable from '@/components/admin/subcategory/SubcategoryTable'
-import SubcategoryModal from '@/components/admin/subcategory/SubcategoryModal'
+import AttributeTemplateTable from '@/components/admin/attribute-template/AttributeTemplateTable'
+import AttributeTemplateModal from '@/components/admin/attribute-template/AttributeTemplateModal'
 
-type Subcategory = any
-type Category = { _id: string; name: string }
-
-export default function SubcategoriesPage() {
+export default function AttributeTemplatesPage() {
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000'
-  const [items, setItems] = useState<Subcategory[]>([])
-  const [categories, setCategories] = useState<Category[]>([])
+  const [items, setItems] = useState<any[]>([])
+  const [subcategories, setSubcategories] = useState<any[]>([])
+  const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
   const [limit] = useState(20)
   const [total, setTotal] = useState(0)
-  const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
-  const [editing, setEditing] = useState<Subcategory | null>(null)
-  const [selectedCategory, setSelectedCategory] = useState<string>('')
+  const [editing, setEditing] = useState<any | null>(null)
 
-  const loadCategories = async () => {
+  const loadSubcategories = async () => {
     try {
-      const res = await apiFetch(`${backendUrl}/categories?limit=100`)
+      const res = await apiFetch(`${backendUrl}/subcategories?limit=100`)
       const data = await res.json()
-      setCategories(data.items || [])
+      setSubcategories(data.items || [])
     } catch (err) {
-      console.error(err)
+      console.error('Load subcategories', err)
     }
   }
 
-
-
-  const loadSubcategories = async (p = page, s = search, c = selectedCategory) => {
+  const loadTemplates = async (p = page, s = search) => {
     try {
       setLoading(true)
-      const q = new URLSearchParams({
-        page: String(p),
-        limit: String(limit),
-      })
+      const q = new URLSearchParams({ page: String(p), limit: String(limit) })
       if (s) q.set('search', s)
-      if (c) q.set('categoryId', c)
-
-      const res = await apiFetch(`${backendUrl}/subcategories?${q.toString()}`, { cache: 'no-store' })
+      const res = await apiFetch(`${backendUrl}/attribute-templates?${q.toString()}`, { cache: 'no-store' })
+      if (!res.ok) throw new Error(await res.text())
       const data = await res.json()
       setItems(data.items || [])
       setTotal(data.total || 0)
       setPage(data.page || 1)
     } catch (err: any) {
-      console.error(err)
-      toast.error(err?.message || 'Tải subcategories thất bại')
+      console.error('Load templates', err)
+      toast.error(err?.message || 'Tải attribute templates thất bại')
     } finally {
       setLoading(false)
     }
   }
 
   useEffect(() => {
-    loadCategories()
-    loadSubcategories(1, search)
+    loadSubcategories()
+    loadTemplates(1, search)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, selectedCategory])
+  }, [search])
 
-  const handleCreate = async (formData: FormData) => {
+  const handleCreate = async (data: any) => {
     try {
-      const res = await apiFetch(`${backendUrl}/subcategories`, {
+      const res = await apiFetch(`${backendUrl}/attribute-templates`, {
         method: 'POST',
-        body: formData,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
       })
       if (!res.ok) throw new Error(await res.text())
-      toast.success('Tạo subcategory thành công')
+      toast.success('Tạo thành công')
       setIsOpen(false)
-      loadSubcategories(1)
+      loadTemplates(1)
     } catch (err: any) {
-      console.error(err)
+      console.error('Create template', err)
       toast.error(err?.message || 'Tạo thất bại')
     }
   }
 
-  const handleUpdate = async (id: string, formData: FormData) => {
+  const handleUpdate = async (id: string, data: any) => {
     try {
-      const res = await apiFetch(`${backendUrl}/subcategories/${id}`, {
+      const res = await apiFetch(`${backendUrl}/attribute-templates/${id}`, {
         method: 'PATCH',
-        body: formData,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
       })
       if (!res.ok) throw new Error(await res.text())
       toast.success('Cập nhật thành công')
       setEditing(null)
       setIsOpen(false)
-      loadSubcategories(page)
+      loadTemplates(page)
     } catch (err: any) {
-      console.error(err)
+      console.error('Update template', err)
       toast.error(err?.message || 'Cập nhật thất bại')
     }
   }
 
-
-  
   const handleDeactivate = async (id: string) => {
     try {
-      const res = await apiFetch(`${backendUrl}/subcategories/${id}`, { method: 'DELETE' })
+      const res = await apiFetch(`${backendUrl}/attribute-templates/${id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error(await res.text())
-      toast.success('Vô hiệu hoá thành công')
-      loadSubcategories(page)
+      toast.success('Đã vô hiệu hoá')
+      loadTemplates(page)
     } catch (err: any) {
       console.error(err)
       toast.error(err?.message || 'Thao tác thất bại')
@@ -113,10 +103,10 @@ export default function SubcategoriesPage() {
 
   const handleActivate = async (id: string) => {
     try {
-      const res = await apiFetch(`${backendUrl}/subcategories/${id}/active`, { method: 'POST' })
+      const res = await apiFetch(`${backendUrl}/attribute-templates/${id}/activate`, { method: 'POST' })
       if (!res.ok) throw new Error(await res.text())
-      toast.success('Kích hoạt thành công')
-      loadSubcategories(page)
+      toast.success('Đã kích hoạt')
+      loadTemplates(page)
     } catch (err: any) {
       console.error(err)
       toast.error(err?.message || 'Thao tác thất bại')
@@ -124,12 +114,12 @@ export default function SubcategoriesPage() {
   }
 
   const handleHardDelete = async (id: string) => {
-    if (!confirm('Xoá vĩnh viễn subcategory này?')) return
+    if (!confirm('Xoá vĩnh viễn template này?')) return
     try {
-      const res = await apiFetch(`${backendUrl}/subcategories/${id}/hard`, { method: 'DELETE' })
+      const res = await apiFetch(`${backendUrl}/attribute-templates/${id}/hard`, { method: 'DELETE' })
       if (!res.ok) throw new Error(await res.text())
-      toast.success('Xoá vĩnh viễn thành công')
-      loadSubcategories(page)
+      toast.success('Đã xoá vĩnh viễn')
+      loadTemplates(page)
     } catch (err: any) {
       console.error(err)
       toast.error(err?.message || 'Xoá thất bại')
@@ -139,7 +129,7 @@ export default function SubcategoriesPage() {
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Quản lý Subcategories</h1>
+        <h1 className="text-2xl font-semibold">Quản lý Attribute Templates</h1>
         <div className="flex items-center gap-3">
           <div className="relative">
             <Search className="absolute left-2 top-2 text-gray-400" size={16} />
@@ -150,16 +140,6 @@ export default function SubcategoriesPage() {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="border rounded-lg px-3 py-2"
-          >
-            <option value="">Tất cả danh mục</option>
-            {categories.map((c) => (
-              <option key={c._id} value={c._id}>{c.name}</option>
-            ))}
-          </select>
           <button
             onClick={() => { setEditing(null); setIsOpen(true) }}
             className="inline-flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
@@ -169,7 +149,7 @@ export default function SubcategoriesPage() {
         </div>
       </div>
 
-      <SubcategoryTable
+      <AttributeTemplateTable
         items={items}
         loading={loading}
         onEdit={(c) => { setEditing(c); setIsOpen(true) }}
@@ -185,36 +165,28 @@ export default function SubcategoriesPage() {
         <div className="flex gap-2">
           <button
             disabled={page <= 1}
-            onClick={() => { setPage(p => { const np = Math.max(1, p - 1); loadSubcategories(np); return np }) }}
-            className={`px-3 py-1 rounded border transition-colors ${
-              page <= 1
-                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                : 'bg-indigo-600 text-white hover:bg-indigo-700'
-            }`}
+            onClick={() => { const np = Math.max(1, page - 1); setPage(np); loadTemplates(np) }}
+            className={`px-3 py-1 rounded border transition-colors ${page <= 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}
           >
             Prev
           </button>
           <button
             disabled={items.length < limit}
-            onClick={() => { setPage(p => { const np = p + 1; loadSubcategories(np); return np }) }}
-            className={`px-3 py-1 rounded border transition-colors ${
-              items.length < limit
-                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                : 'bg-indigo-600 text-white hover:bg-indigo-700'
-            }`}
+            onClick={() => { const np = page + 1; setPage(np); loadTemplates(np) }}
+            className={`px-3 py-1 rounded border transition-colors ${items.length < limit ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}
           >
             Next
           </button>
         </div>
       </div>
 
-      <SubcategoryModal
+      <AttributeTemplateModal
         open={isOpen}
         onClose={() => setIsOpen(false)}
         onCreate={handleCreate}
         onUpdate={handleUpdate}
         editing={editing}
-        categories={categories}
+        subcategories={subcategories}
       />
     </div>
   )
