@@ -2,9 +2,8 @@
 
 import React, { useEffect, useState } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
-import { X } from 'lucide-react'
+import { X, PlusCircle, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { apiFetch } from '@/lib/api'
 
 interface Props {
   open?: boolean
@@ -13,6 +12,33 @@ interface Props {
   onUpdate: (id: string, data: any) => Promise<void>
   editing?: any
   subcategories?: { _id: string; name: string }[]
+}
+
+
+function Button({
+  children,
+  onClick,
+  type = 'button',
+  variant = 'default',
+  disabled = false,
+  className = '',
+}: any) {
+  const base =
+    'px-4 py-2 rounded text-sm font-medium transition-colors focus:outline-none ' +
+    (variant === 'outline'
+      ? 'border border-gray-300 text-gray-700 hover:bg-gray-100'
+      : 'bg-indigo-600 text-white hover:bg-indigo-700 disabled:bg-indigo-300')
+
+  return (
+    <button
+      type={type}
+      onClick={onClick}
+      disabled={disabled}
+      className={`${base} ${className}`}
+    >
+      {children}
+    </button>
+  )
 }
 
 export default function AttributeTemplateModal({
@@ -27,7 +53,7 @@ export default function AttributeTemplateModal({
     name: '',
     subcategoryId: '',
     version: 1,
-    attributes: '',
+    attributes: [] as any[],
     isActive: true,
   })
   const [loading, setLoading] = useState(false)
@@ -41,7 +67,9 @@ export default function AttributeTemplateModal({
             ? editing.subcategoryId
             : editing.subcategoryId?._id ?? '',
         version: editing.version ?? 1,
-        attributes: JSON.stringify(editing.attributes ?? [], null, 2),
+        attributes: Array.isArray(editing.attributes)
+          ? editing.attributes
+          : [],
         isActive: editing.isActive ?? true,
       })
     } else {
@@ -49,49 +77,42 @@ export default function AttributeTemplateModal({
         name: '',
         subcategoryId: '',
         version: 1,
-        attributes: '',
+        attributes: [],
         isActive: true,
       })
     }
   }, [editing, open])
 
-  const change = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target
-    setForm(prev => ({ ...prev, [name]: type === 'number' ? Number(value) : value }))
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     try {
-      // validate required
-      if (!form.subcategoryId) return toast.error('Chọn subcategory (subcategoryId)')
-
-      let attributesParsed: any = []
-      if (form.attributes && form.attributes.trim() !== '') {
-        try {
-          attributesParsed = JSON.parse(form.attributes)
-          if (!Array.isArray(attributesParsed)) {
-            return toast.error('Attributes phải là mảng JSON (ví dụ: [ { "key": "..."} ])')
-          }
-        } catch {
-          return toast.error('Attributes không phải JSON hợp lệ')
-        }
-      }
+      if (!form.subcategoryId) return toast.error('Chọn subcategory')
 
       const payload = {
         name: form.name || undefined,
         subcategoryId: form.subcategoryId,
         version: form.version,
         isActive: form.isActive,
-        attributes: attributesParsed,
+        attributes: form.attributes,
       }
 
       if (editing) {
         await onUpdate(editing._id, payload)
+        toast.success('Cập nhật thành công')
       } else {
         await onCreate(payload)
+        toast.success('Tạo mới thành công')
       }
+      setForm({
+        name: '',
+        subcategoryId: '',
+        version: 1,
+        attributes: [],
+        isActive: true,
+      })
+
+      onClose?.()
     } catch (err: any) {
       console.error(err)
       toast.error(err?.message || 'Lưu thất bại')
@@ -100,16 +121,39 @@ export default function AttributeTemplateModal({
     }
   }
 
+  const handleAttrChange = (index: number, key: string, value: any) => {
+    const updated = [...form.attributes]
+    updated[index] = { ...updated[index], [key]: value }
+    setForm((f) => ({ ...f, attributes: updated }))
+  }
+
+  const addAttribute = () => {
+    setForm((f) => ({
+      ...f,
+      attributes: [
+        ...f.attributes,
+        { key: '', label: '', type: 'string', required: false, unit: '', options: [] },
+      ],
+    }))
+  }
+
+  const removeAttribute = (index: number) => {
+    const updated = form.attributes.filter((_, i) => i !== index)
+    setForm((f) => ({ ...f, attributes: updated }))
+  }
+
   return (
     <Dialog.Root open={open} onOpenChange={onClose}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black/40" />
+        <Dialog.Overlay className="fixed inset-0 bg-black/40 z-40" />
         <Dialog.Content
-          className="fixed left-1/2 top-1/2 w-[720px] max-w-[95vw]
+          className="fixed left-1/2 top-1/2 w-[800px] max-w-[95vw]
                      -translate-x-1/2 -translate-y-1/2 bg-white
-                     rounded-2xl p-6 shadow-2xl max-h-[90vh] overflow-auto"
+                     rounded-2xl shadow-2xl max-h-[85vh]
+                     flex flex-col z-50"
         >
-          <div className="flex items-center justify-between mb-4">
+          {/* Header */}
+          <div className="flex items-center justify-between px-6 py-4 border-b">
             <Dialog.Title className="text-lg font-semibold">
               {editing ? 'Sửa Attribute Template' : 'Tạo Attribute Template'}
             </Dialog.Title>
@@ -120,16 +164,17 @@ export default function AttributeTemplateModal({
             </Dialog.Close>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+          {/* Body */}
+          <div className="overflow-y-auto px-6 py-4 space-y-5">
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium">Tên (name)</label>
+                <label className="block text-sm font-medium">Tên</label>
                 <input
                   name="name"
                   value={form.name}
-                  onChange={change}
+                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                   className="w-full border rounded px-3 py-2"
-                  placeholder="Tên template (có thể để trống để lấy từ subcategory)"
+                  placeholder="Tên template"
                 />
               </div>
 
@@ -138,7 +183,9 @@ export default function AttributeTemplateModal({
                 <select
                   name="subcategoryId"
                   value={form.subcategoryId}
-                  onChange={change}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, subcategoryId: e.target.value }))
+                  }
                   className="w-full border rounded px-3 py-2"
                   required
                 >
@@ -152,58 +199,137 @@ export default function AttributeTemplateModal({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium">Version</label>
                 <input
-                  name="version"
                   type="number"
                   value={form.version}
-                  onChange={change}
-                  className="w-full border rounded px-3 py-2"
                   min={1}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, version: Number(e.target.value) }))
+                  }
+                  className="w-full border rounded px-3 py-2"
                 />
               </div>
-
-              <div className="flex items-center gap-3">
-                <label className="block text-sm font-medium">Active</label>
+              <div className="flex items-center gap-3 mt-6">
+                <label className="text-sm font-medium">Active</label>
                 <input
-                  name="isActive"
                   type="checkbox"
-                  checked={Boolean(form.isActive)}
-                  onChange={(e) => setForm(prev => ({ ...prev, isActive: e.target.checked }))}
-                  className="mt-2"
+                  checked={form.isActive}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, isActive: e.target.checked }))
+                  }
                 />
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium">Attributes (JSON array)</label>
-              <textarea
-                name="attributes"
-                value={form.attributes}
-                onChange={change}
-                rows={8}
-                className="w-full border rounded px-3 py-2 font-mono text-sm"
-                placeholder='Ví dụ: [{"key":"brand","label":"Brand","type":"string"}]'
-              />
-            </div>
-
-            <div className="flex justify-end gap-3 mt-3">
-              <Dialog.Close asChild>
-                <button type="button" className="px-4 py-2 rounded border hover:bg-gray-100">
-                  Huỷ
+            {/* Attributes */}
+            <div className="border-t pt-4">
+              <div className="flex justify-between items-center mb-3">
+                <label className="text-sm font-medium">Thuộc tính</label>
+                <button
+                  type="button"
+                  onClick={addAttribute}
+                  className="flex items-center gap-1 text-indigo-600 hover:text-indigo-800 text-sm"
+                >
+                  <PlusCircle size={16} /> Thêm thuộc tính
                 </button>
-              </Dialog.Close>
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-4 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700"
-              >
-                {loading ? 'Đang lưu...' : editing ? 'Lưu' : 'Tạo'}
-              </button>
+              </div>
+
+              {form.attributes.length === 0 ? (
+                <p className="text-sm text-gray-500">Chưa có thuộc tính nào.</p>
+              ) : (
+                <div className="space-y-2">
+                  {form.attributes.map((attr, i) => (
+                    <div
+                      key={i}
+                      className="flex flex-wrap gap-2 border rounded-lg p-3 bg-gray-50"
+                    >
+                      <input
+                        placeholder="Key"
+                        className="border rounded px-2 py-1 text-sm flex-1 min-w-[100px]"
+                        value={attr.key}
+                        onChange={(e) => handleAttrChange(i, 'key', e.target.value)}
+                      />
+                      <input
+                        placeholder="Label"
+                        className="border rounded px-2 py-1 text-sm flex-1 min-w-[100px]"
+                        value={attr.label}
+                        onChange={(e) => handleAttrChange(i, 'label', e.target.value)}
+                      />
+                      <select
+                        className="border rounded px-2 py-1 text-sm"
+                        value={attr.type}
+                        onChange={(e) => handleAttrChange(i, 'type', e.target.value)}
+                      >
+                        <option value="string">string</option>
+                        <option value="number">number</option>
+                        <option value="boolean">boolean</option>
+                        <option value="enum">enum</option>
+                      </select>
+                      <input
+                        placeholder="Unit"
+                        className="border rounded px-2 py-1 text-sm w-[80px]"
+                        value={attr.unit || ''}
+                        onChange={(e) => handleAttrChange(i, 'unit', e.target.value)}
+                      />
+                      <label className="flex items-center gap-1 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={attr.required || false}
+                          onChange={(e) =>
+                            handleAttrChange(i, 'required', e.target.checked)
+                          }
+                        />
+                        Bắt buộc
+                      </label>
+                      <input
+                        placeholder='["Red","Blue"]'
+                        className="border rounded px-2 py-1 text-sm flex-1 min-w-[150px]"
+                        value={
+                          Array.isArray(attr.options)
+                            ? JSON.stringify(attr.options)
+                            : attr.options || ''
+                        }
+                        onChange={(e) => {
+                          try {
+                            const val = JSON.parse(e.target.value)
+                            handleAttrChange(i, 'options', val)
+                          } catch {
+                            handleAttrChange(i, 'options', e.target.value)
+                          }
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeAttribute(i)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          </form>
+          </div>
+
+          {/* Footer */}
+          <div className="flex justify-end gap-3 px-6 py-4 border-t bg-gray-50">
+            <Dialog.Close asChild>
+              <Button variant="outline" onClick={onClose}>
+                Huỷ
+              </Button>
+            </Dialog.Close>
+            <Button
+              type="submit"
+              disabled={loading}
+              onClick={handleSubmit}
+            >
+              {loading ? 'Đang lưu...' : editing ? 'Lưu' : 'Tạo'}
+            </Button>
+          </div>
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

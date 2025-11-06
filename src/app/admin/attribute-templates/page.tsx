@@ -89,34 +89,10 @@ export default function AttributeTemplatesPage() {
     }
   }
 
-  const handleDeactivate = async (id: string) => {
-    try {
-      const res = await apiFetch(`${backendUrl}/attribute-templates/${id}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error(await res.text())
-      toast.success('Đã vô hiệu hoá')
-      loadTemplates(page)
-    } catch (err: any) {
-      console.error(err)
-      toast.error(err?.message || 'Thao tác thất bại')
-    }
-  }
-
-  const handleActivate = async (id: string) => {
-    try {
-      const res = await apiFetch(`${backendUrl}/attribute-templates/${id}/activate`, { method: 'POST' })
-      if (!res.ok) throw new Error(await res.text())
-      toast.success('Đã kích hoạt')
-      loadTemplates(page)
-    } catch (err: any) {
-      console.error(err)
-      toast.error(err?.message || 'Thao tác thất bại')
-    }
-  }
-
   const handleHardDelete = async (id: string) => {
     if (!confirm('Xoá vĩnh viễn template này?')) return
     try {
-      const res = await apiFetch(`${backendUrl}/attribute-templates/${id}/hard`, { method: 'DELETE' })
+      const res = await apiFetch(`${backendUrl}/attribute-templates/${id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error(await res.text())
       toast.success('Đã xoá vĩnh viễn')
       loadTemplates(page)
@@ -153,8 +129,6 @@ export default function AttributeTemplatesPage() {
         items={items}
         loading={loading}
         onEdit={(c) => { setEditing(c); setIsOpen(true) }}
-        onDeactivate={handleDeactivate}
-        onActivate={handleActivate}
         onHardDelete={handleHardDelete}
       />
 
@@ -182,7 +156,10 @@ export default function AttributeTemplatesPage() {
 
       <AttributeTemplateModal
         open={isOpen}
-        onClose={() => setIsOpen(false)}
+        onClose={() => {
+          setIsOpen(false)
+          setEditing(null)
+        }}
         onCreate={handleCreate}
         onUpdate={handleUpdate}
         editing={editing}
