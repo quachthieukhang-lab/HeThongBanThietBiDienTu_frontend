@@ -4,14 +4,13 @@ import React, { useEffect, useState } from 'react'
 import { Search } from 'lucide-react'
 import { toast, Toaster } from 'react-hot-toast'
 import ReviewTable from '@/components/admin/review/ReviewTable'
-import { apiFetch } from '@/lib/api' // ✅ dùng chung helper với UsersPage
+import { apiFetch } from '@/lib/api' 
 
 export default function ReviewsPage() {
   const [reviews, setReviews] = useState<any[]>([])
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // 🧩 Load danh sách đánh giá
   const loadReviews = async () => {
     setLoading(true)
     try {
@@ -53,7 +52,7 @@ export default function ReviewsPage() {
     loadReviews()
   }, [search])
 
-  // 🧩 Phê duyệt đánh giá
+
   const handleApprove = async (id: string) => {
     try {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000'
@@ -79,7 +78,7 @@ export default function ReviewsPage() {
     }
   }
 
-  // 🧩 Xóa đánh giá
+
   const handleDelete = async (id: string) => {
     try {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000'
