@@ -44,17 +44,15 @@ export default function CategoriesPage() {
 
   useEffect(() => {
     load(1, search)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search])
 
-  const handleCreate = async (payload: any) => {
+  const handleCreate = async (formData: FormData) => {
     try {
       const res = await apiFetch(`${backendUrl}/categories`, {
         method: 'POST',
-        body: JSON.stringify(payload),
+        body: formData,
       })
       if (!res.ok) throw new Error(await res.text())
-      const doc = await res.json()
       toast.success('Tạo category thành công')
       setIsOpen(false)
       load(1, search)
@@ -64,11 +62,11 @@ export default function CategoriesPage() {
     }
   }
 
-  const handleUpdate = async (id: string, payload: any) => {
+  const handleUpdate = async (id: string, formData: FormData) => {
     try {
       const res = await apiFetch(`${backendUrl}/categories/${id}`, {
         method: 'PATCH',
-        body: JSON.stringify(payload),
+        body: formData,
       })
       if (!res.ok) throw new Error(await res.text())
       toast.success('Cập nhật thành công')

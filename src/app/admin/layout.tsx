@@ -21,7 +21,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { label: 'Danh Mục Sản Phẩm', href: '/admin/categories', icon: <Boxes size={18} />, sub: [
       { label: 'Danh mục chính', href: '/admin/categories' },
       { label: 'Danh mục con', href: '/admin/subcategories' },
-    ]},
+    ]
+    },
+    { label: 'Mẫu Thuộc Tính', href: '/admin/attribute-templates', icon: <Tag size={18} /> },
+    { label: 'Sản Phẩm', href: '/admin/products', icon: <Package size={18} /> },
     { label: 'Gói Dịch Vụ Sản Phẩm', href: '/admin/packages', icon: <Package size={18} /> },
     { label: 'Quản Lý Đơn Hàng', href: '/admin/orders', icon: <Tag size={18} /> },
     { label: 'Thương Hiệu', href: '/admin/brands', icon: <Star size={18} /> },
@@ -32,7 +35,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <aside className="w-72 bg-gradient-to-b from-indigo-600 to-purple-600 text-white fixed top-0 left-0 h-full overflow-y-auto shadow-lg">
+      <aside className="w-72 bg-gradient-to-b from-slate-800 to-cyan-700 text-white fixed top-0 left-0 h-full overflow-y-auto shadow-lg">
         <div className="p-6">
           <h2 className="text-2xl font-bold mb-10">Quản Trị Viên</h2>
 

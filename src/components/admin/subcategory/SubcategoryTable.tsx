@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import Image from 'next/image'
 import { Pencil, Trash2, Power, PowerOff } from 'lucide-react'
 
 export default function SubcategoryTable({
@@ -11,6 +12,8 @@ export default function SubcategoryTable({
   onActivate,
   onHardDelete,
 }: any) {
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000'
+
   return (
     <div className="w-full rounded-lg shadow border border-gray-200 bg-white overflow-hidden">
       <div className="overflow-auto">
@@ -30,32 +33,24 @@ export default function SubcategoryTable({
           <tbody className="text-sm divide-y">
             {loading ? (
               <tr>
-                <td colSpan={7} className="py-6 text-center">
-                  Đang tải...
-                </td>
+                <td colSpan={7} className="py-6 text-center">Đang tải...</td>
               </tr>
             ) : items.length === 0 ? (
               <tr>
-                <td colSpan={7} className="py-6 text-center text-gray-500">
-                  Không có mục
-                </td>
+                <td colSpan={7} className="py-6 text-center text-gray-500">Không có mục</td>
               </tr>
             ) : (
               items.map((s: any) => (
                 <tr key={s._id} className="hover:bg-indigo-50 transition">
                   <td className="px-4 py-3">
                     {s.image ? (
-                      <img
-                        src={s.image}
-                        alt={s.name}
-                        width={50}
-                        height={50}
-                        className="rounded-md border object-cover w-[50px] h-[50px]"
-                      />
+                      s.image.startsWith('http') ? (
+                        <img src={s.image} alt={s.name} className="w-[50px] h-[50px] object-cover rounded border" />
+                      ) : (
+                        <Image src={`${backendUrl}/${s.image}`} alt={s.name} width={50} height={50} className="rounded border object-cover" />
+                      )
                     ) : (
-                      <div className="w-[50px] h-[50px] bg-gray-100 border rounded-md flex items-center justify-center text-xs text-gray-400">
-                        No Img
-                      </div>
+                      <div className="w-[50px] h-[50px] bg-gray-100 border rounded-md flex items-center justify-center text-xs text-gray-400">No Img</div>
                     )}
                   </td>
 
@@ -64,35 +59,21 @@ export default function SubcategoryTable({
                   <td className="px-4 py-3">{s.categoryId?.name ?? s.categoryName ?? '—'}</td>
                   <td className="px-4 py-3 text-center">
                     {s.isActive ? (
-                      <span className="inline-block px-2 py-1 text-xs font-semibold bg-green-100 text-green-700 rounded-full">
-                        Đang hoạt động
-                      </span>
+                      <span className="inline-block px-2 py-1 text-xs font-semibold bg-green-100 text-green-700 rounded-full">Đang hoạt động</span>
                     ) : (
-                      <span className="inline-block px-2 py-1 text-xs font-semibold bg-red-100 text-red-600 rounded-full">
-                        Ngừng
-                      </span>
+                      <span className="inline-block px-2 py-1 text-xs font-semibold bg-red-100 text-red-600 rounded-full">Ngừng</span>
                     )}
                   </td>
                   <td className="px-4 py-3 text-center">{s.sortOrder ?? 0}</td>
                   <td className="px-4 py-3 text-center">
                     <div className="flex items-center justify-center gap-2">
-                      <button onClick={() => onEdit(s)} className="p-2 rounded hover:bg-indigo-100">
-                        <Pencil size={16} className="text-indigo-600" />
-                      </button>
-
+                      <button onClick={() => onEdit(s)} className="p-2 rounded hover:bg-indigo-100"><Pencil size={16} className="text-indigo-600" /></button>
                       {s.isActive ? (
-                        <button onClick={() => onDeactivate(s._id)} className="p-2 rounded hover:bg-yellow-100">
-                          <PowerOff size={16} className="text-yellow-600" />
-                        </button>
+                        <button onClick={() => onDeactivate(s._id)} className="p-2 rounded hover:bg-yellow-100"><PowerOff size={16} className="text-yellow-600" /></button>
                       ) : (
-                        <button onClick={() => onActivate(s._id)} className="p-2 rounded hover:bg-green-100">
-                          <Power size={16} className="text-green-600" />
-                        </button>
+                        <button onClick={() => onActivate(s._id)} className="p-2 rounded hover:bg-green-100"><Power size={16} className="text-green-600" /></button>
                       )}
-
-                      <button onClick={() => onHardDelete(s._id)} className="p-2 rounded hover:bg-red-100">
-                        <Trash2 size={16} className="text-red-600" />
-                      </button>
+                      <button onClick={() => onHardDelete(s._id)} className="p-2 rounded hover:bg-red-100"><Trash2 size={16} className="text-red-600" /></button>
                     </div>
                   </td>
                 </tr>

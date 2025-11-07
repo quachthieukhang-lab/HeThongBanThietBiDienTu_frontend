@@ -4,6 +4,8 @@ import Image from 'next/image'
 import { Pencil, Trash2, Power, PowerOff } from 'lucide-react'
 
 export default function CategoryTable({ items = [], loading = false, onEdit, onDeactivate, onActivate, onHardDelete }: any) {
+  const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
+
   return (
     <div className="w-full rounded-lg shadow border border-gray-200 bg-white overflow-hidden">
       <div className="overflow-auto">
@@ -29,17 +31,28 @@ export default function CategoryTable({ items = [], loading = false, onEdit, onD
                 <tr key={c._id} className="hover:bg-indigo-50 transition">
                   <td className="px-4 py-3">
                     {c.image ? (
-                      <Image
-                        src={c.image}
-                        alt={c.name}
-                        width={50}
-                        height={50}
-                        className="rounded-md border object-cover"
-                      />
+                      c.image.startsWith('http') ? (
+                        <img
+                          src={c.image}
+                          alt={c.name}
+                          className="w-[50px] h-[50px] rounded-md border object-cover"
+                        />
+                      ) : (
+                        <Image
+                          src={`${backendUrl}/${c.image}`}
+                          alt={c.name}
+                          width={50}
+                          height={50}
+                          className="rounded-md border object-cover"
+                        />
+                      )
                     ) : (
-                      <div className="w-[50px] h-[50px] bg-gray-100 border rounded-md flex items-center justify-center text-xs text-gray-400">No Img</div>
+                      <div className="w-[50px] h-[50px] bg-gray-100 border rounded-md flex items-center justify-center text-xs text-gray-400">
+                        No Img
+                      </div>
                     )}
                   </td>
+
                   <td className="px-4 py-3 font-medium">{c.name}</td>
                   <td className="px-4 py-3 text-gray-600">{c.slug}</td>
                   <td className="px-4 py-3 text-center">

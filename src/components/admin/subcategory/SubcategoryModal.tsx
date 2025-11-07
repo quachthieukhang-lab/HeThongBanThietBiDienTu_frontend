@@ -192,7 +192,7 @@ export default function SubcategoryModal({
   onUpdate,
   editing,
   categories = [],
-}: any) {
+}: SubcategoryModalProps) {
   const [form, setForm] = useState({
     name: '',
     slug: '',
@@ -304,9 +304,13 @@ export default function SubcategoryModal({
 
         <Dialog.Content className="fixed left-1/2 top-1/2 w-[700px] max-w-[95vw] -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl p-6 shadow-2xl max-h-[90vh] overflow-auto">
           <div className="flex items-center justify-between mb-4">
-            <Dialog.Title className="text-lg font-semibold">{editing ? 'Sửa Subcategory' : 'Tạo Subcategory'}</Dialog.Title>
+            <Dialog.Title className="text-lg font-semibold">
+              {editing ? 'Sửa Subcategory' : 'Tạo Subcategory'}
+            </Dialog.Title>
             <Dialog.Close asChild>
-              <button className="p-1 text-gray-500 hover:text-gray-700"><X /></button>
+              <button className="p-1 text-gray-500 hover:text-gray-700">
+                <X />
+              </button>
             </Dialog.Close>
           </div>
 
@@ -314,36 +318,65 @@ export default function SubcategoryModal({
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-sm font-medium">Tên*</label>
-                <input name="name" value={form.name} onChange={handleChange} className="w-full border rounded px-3 py-2" />
+                <input
+                  name="name"
+                  value={form.name}
+                  onChange={handleChange}
+                  className="w-full border rounded px-3 py-2"
+                />
               </div>
               <div>
                 <label className="text-sm font-medium">Slug</label>
-                <input name="slug" value={form.slug} onChange={handleChange} className="w-full border rounded px-3 py-2" />
+                <input
+                  name="slug"
+                  value={form.slug}
+                  onChange={handleChange}
+                  className="w-full border rounded px-3 py-2"
+                />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-sm font-medium">Danh mục cha*</label>
-                <select name="categoryId" value={form.categoryId} onChange={handleChange} className="w-full border rounded px-3 py-2">
+                <select
+                  name="categoryId"
+                  value={form.categoryId}
+                  onChange={handleChange}
+                  className="w-full border rounded px-3 py-2"
+                >
                   <option value="">-- Chọn danh mục --</option>
-                  {categories.map((c: any) => (
-                    <option key={c._id} value={c._id}>{c.name}</option>
+                  {categories.map(c => (
+                    <option key={c._id} value={c._id}>
+                      {c.name}
+                    </option>
                   ))}
                 </select>
               </div>
-
               <div>
                 <label className="text-sm font-medium">Sort Order</label>
-                <input name="sortOrder" type="number" value={form.sortOrder} onChange={handleChange} className="w-full border rounded px-3 py-2" />
+                <input
+                  name="sortOrder"
+                  type="number"
+                  value={form.sortOrder}
+                  onChange={handleChange}
+                  className="w-full border rounded px-3 py-2"
+                />
               </div>
             </div>
 
             <div>
               <label className="text-sm font-medium">Description</label>
-              <textarea name="description" value={form.description} onChange={handleChange} className="w-full border rounded px-3 py-2" rows={3} />
+              <textarea
+                name="description"
+                value={form.description}
+                onChange={handleChange}
+                className="w-full border rounded px-3 py-2"
+                rows={3}
+              />
             </div>
 
+            {/* Upload ảnh */}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-sm font-medium">Image</label>
@@ -357,29 +390,49 @@ export default function SubcategoryModal({
               </div>
             </div>
 
+            {/* SEO */}
             <div>
               <label className="text-sm font-medium">Path (SEO)</label>
-              <input name="path" value={form.path} onChange={handleChange} className="w-full border rounded px-3 py-2" />
+              <input
+                name="path"
+                value={form.path}
+                onChange={handleChange}
+                className="w-full border rounded px-3 py-2"
+              />
             </div>
-
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-sm font-medium">Meta Title</label>
-                <input name="metaTitle" value={form.metaTitle} onChange={handleChange} className="w-full border rounded px-3 py-2" />
+                <input
+                  name="metaTitle"
+                  value={form.metaTitle}
+                  onChange={handleChange}
+                  className="w-full border rounded px-3 py-2"
+                />
               </div>
-
               <div>
                 <label className="text-sm font-medium">Meta Description</label>
-                <input name="metaDescription" value={form.metaDescription} onChange={handleChange} className="w-full border rounded px-3 py-2" />
+                <input
+                  name="metaDescription"
+                  value={form.metaDescription}
+                  onChange={handleChange}
+                  className="w-full border rounded px-3 py-2"
+                />
               </div>
             </div>
 
             <div className="flex justify-end gap-3 mt-5">
               <Dialog.Close asChild>
-                <button type="button" className="px-4 py-2 rounded border hover:bg-gray-100">Huỷ</button>
+                <button type="button" className="px-4 py-2 rounded border hover:bg-gray-100">
+                  Huỷ
+                </button>
               </Dialog.Close>
-
-              <button type="submit" className="px-4 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700">{editing ? 'Lưu' : 'Tạo'}</button>
+              <button
+                type="submit"
+                className="px-4 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700"
+              >
+                {editing ? 'Lưu' : 'Tạo'}
+              </button>
             </div>
           </form>
         </Dialog.Content>

@@ -33,6 +33,8 @@ export default function SubcategoriesPage() {
     }
   }
 
+
+
   const loadSubcategories = async (p = page, s = search, c = selectedCategory) => {
     try {
       setLoading(true)
@@ -62,11 +64,11 @@ export default function SubcategoriesPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, selectedCategory])
 
-  const handleCreate = async (payload: any) => {
+  const handleCreate = async (formData: FormData) => {
     try {
       const res = await apiFetch(`${backendUrl}/subcategories`, {
         method: 'POST',
-        body: JSON.stringify(payload),
+        body: formData,
       })
       if (!res.ok) throw new Error(await res.text())
       toast.success('Tạo subcategory thành công')
@@ -78,11 +80,11 @@ export default function SubcategoriesPage() {
     }
   }
 
-  const handleUpdate = async (id: string, payload: any) => {
+  const handleUpdate = async (id: string, formData: FormData) => {
     try {
       const res = await apiFetch(`${backendUrl}/subcategories/${id}`, {
         method: 'PATCH',
-        body: JSON.stringify(payload),
+        body: formData,
       })
       if (!res.ok) throw new Error(await res.text())
       toast.success('Cập nhật thành công')
@@ -95,6 +97,8 @@ export default function SubcategoriesPage() {
     }
   }
 
+
+  
   const handleDeactivate = async (id: string) => {
     try {
       const res = await apiFetch(`${backendUrl}/subcategories/${id}`, { method: 'DELETE' })
