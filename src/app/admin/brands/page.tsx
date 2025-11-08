@@ -10,23 +10,36 @@ import { getBrands, createBrand, updateBrand, deleteBrand } from '@/app/api/admi
 export default function BrandsPage() {
   const [brands, setBrands] = useState<any[]>([]);
   const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState('name'); // Thêm state để sắp xếp
+  const [page, setPage] = useState(1);
+  const [limit] = useState(20);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editingBrand, setEditingBrand] = useState<any>(null);
 
   const loadBrands = async () => {
     try {
-      const data = await getBrands({ q: search });
+      setLoading(true);
+      const data = await getBrands({ q: search, sort: sortBy, page, limit });
       setBrands(data.items || []);
+      setTotal(data.total || 0);
     } catch (error) {
       console.error('Lỗi khi tải danh sách brands:', error);
       toast.error('Tải danh sách brands thất bại');
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     loadBrands();
-  }, [search]);
+  }, [search, sortBy, page]); // Thêm page vào dependency array
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+  };
 
   const handleAdd = async (form: any, file?: File) => {
     try {
@@ -80,6 +93,17 @@ export default function BrandsPage() {
             />
           </div>
 
+          <div className="relative">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="appearance-none pr-8 pl-3 py-2 border rounded-xl focus:ring-2 focus:ring-blue-400 outline-none"
+            >
+              <option value="name">Sắp xếp theo tên</option>
+              <option value="-createdAt">Mới nhất</option>
+            </select>
+          </div>
+
           <button
             onClick={() => setIsAddOpen(true)}
             className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 transition"
@@ -91,12 +115,35 @@ export default function BrandsPage() {
 
       <BrandTable
         brands={brands}
+        loading={loading}
         onEdit={(b) => {
           setEditingBrand(b);
           setIsEditOpen(true);
         }}
         onDelete={handleDelete}
       />
+
+      <div className="flex items-center justify-between mt-4">
+        <div className="text-sm text-gray-600">
+          {`Tổng: ${total} thương hiệu — Trang ${page}`}
+        </div>
+        <div className="flex gap-2">
+          <button
+            disabled={page <= 1 || loading}
+            onClick={() => handlePageChange(page - 1)}
+            className="px-3 py-1 rounded border transition-colors disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed bg-white hover:bg-gray-100"
+          >
+            Trước
+          </button>
+          <button
+            disabled={brands.length < limit || loading}
+            onClick={() => handlePageChange(page + 1)}
+            className="px-3 py-1 rounded border transition-colors disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed bg-white hover:bg-gray-100"
+          >
+            Sau
+          </button>
+        </div>
+      </div>
 
       {isAddOpen && <AddBrandModal onClose={() => setIsAddOpen(false)} onSuccess={handleAdd} />}
 

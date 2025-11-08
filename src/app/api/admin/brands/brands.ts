@@ -1,4 +1,4 @@
-import { apiFetch } from '@/lib/api'; // hoặc đường dẫn đúng của bạn
+import { apiFetch } from '@/lib/api'
 
 const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000';
 const API_URL = `${BASE_URL}/brands`;
