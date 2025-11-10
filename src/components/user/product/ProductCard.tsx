@@ -16,9 +16,9 @@ export default function ProductCard({ product }: { product: ProductLite }) {
   return (
     <Link
       href={`/product/${slug}`}
-      className="group bg-white rounded-xl p-4 border border-gray-100 hover:shadow-md transition flex flex-col"
+      className="group bg-white rounded-xl p-4 border border-gray-100 hover:shadow-md transition flex flex-col hover:text-blue-300"
     >
-      <div className="relative aspect-square mb-3 rounded-lg overflow-hidden bg-gray-50">
+      <div className="relative h-36 md:h-48 lg:h-60 mb-3 rounded-lg overflow-hidden bg-gray-50 ">
         {thumbnail && (
           <Image
             src={thumbnail}
@@ -28,8 +28,9 @@ export default function ProductCard({ product }: { product: ProductLite }) {
           />
         )}
       </div>
-
-      <h3 className="text-sm font-medium line-clamp-2 mb-1">{name}</h3>
+      
+      <h3 className="text-sm font-medium line-clamp-2 mb-1 ">{name}</h3>
+      <p className="text-yellow-500 text-xs font-light mb-1">Online giá quá rẻ</p>
       <p className="text-red-500 text-sm font-semibold">{showPrice}</p>
       {rating && (
         <p className="text-xs text-yellow-500 mt-1">

@@ -24,7 +24,7 @@ export interface Product {
 // Dành cho hiển thị danh sách sản phẩm (tối giản)
 export type ProductLite = Pick<
   Product,
-  "_id" | "name" | "slug" | "thumbnail" | "priceFrom" | "priceTo" | "images"
+  "_id" | "name" | "slug" | "thumbnail" | "priceFrom" | "priceTo" | "images" | "categoryId" | "subcategoryId"
 > & { rating?: number };
 
 // Chi tiết variant
