@@ -29,7 +29,7 @@ export default function CategorySection() {
 
   if (!subcategories || subcategories.length === 0)
     return <p className="text-center text-gray-400 mt-6">Chưa có danh mục nào.</p>;
-const initialCount = 3;
+const initialCount = 6;
  const displayList = showAll ? subcategories : subcategories.slice(0, initialCount);
   return (
     
