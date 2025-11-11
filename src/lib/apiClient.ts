@@ -13,7 +13,7 @@ export async function apiClient<T>(
 ): Promise<T> {
   if (isMockEnabled) return mockFn();
   // Gọi API thật
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
   const url = path.startsWith("http") ? path : `${baseUrl}${path}`;
   // Gọi API bằng axios
   // Do backend trả về dạng { items: [...] } nên cần xử lý thêm

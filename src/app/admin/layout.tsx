@@ -2,18 +2,46 @@
 
 import React, { ReactNode, useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { Avatar, AvatarFallback } from '@radix-ui/react-avatar'
 import { LayoutDashboard, BarChart3, Users, Boxes, Package, Tag, Star, Gift, ChevronDown, ChevronRight } from 'lucide-react'
+import useSWRMutation from 'swr/mutation'
+import toast, { Toaster } from 'react-hot-toast'
 
 interface AdminLayoutProps {
   children: ReactNode
 }
 
+// Define the fetcher function for the logout mutation
+async function logoutFetcher(url: string, { arg }: { arg: { refreshToken: string | null } }) {
+  const res = await fetch(`http://localhost:3000${url}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refreshToken: arg.refreshToken }),
+  })
+
+  if (!res.ok) {
+    const errorInfo = await res.json().catch(() => ({ message: 'An unknown error occurred during logout.' }))
+    throw new Error(errorInfo.message || 'Logout failed')
+  }
+
+  return res.json()
+}
+
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname()
+  const router = useRouter()
   const [openCategoryMenu, setOpenCategoryMenu] = useState(false)
+  const { trigger: logoutTrigger } = useSWRMutation('/auth/logout', logoutFetcher)
 
+  const handleLogout = async () => {
+    const refreshToken = localStorage.getItem('refresh_token')
+    await logoutTrigger({ refreshToken })
+    localStorage.removeItem('access_token')
+    localStorage.removeItem('refresh_token')
+    toast.success('Đăng xuất thành công!')
+    router.push('/') // Redirect to the login page
+  }
   const links = [
     { label: 'Trang Chủ', href: '/admin/dashboard', icon: <LayoutDashboard size={18} /> },
     { label: 'Báo Cáo Thống Kê', href: '/admin/reports', icon: <BarChart3 size={18} /> },
@@ -34,6 +62,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
+      <Toaster position="top-right" />
       {/* Sidebar */}
       <aside className="w-72 bg-gradient-to-b from-slate-800 to-cyan-700 text-white fixed top-0 left-0 h-full overflow-y-auto shadow-lg">
         <div className="p-6">
@@ -121,7 +150,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 <p className="text-xs text-gray-200">nnhao@gmail.com</p>
               </div>
             </div>
-            <button className="mt-4 w-full text-left text-sm text-gray-200 hover:text-white transition">
+            <button onClick={handleLogout} className="mt-4 w-full text-left text-sm text-gray-200 hover:text-white transition">
               Đăng xuất
             </button>
           </div>
