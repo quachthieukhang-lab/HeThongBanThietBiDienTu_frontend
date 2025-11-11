@@ -1,17 +1,82 @@
-import type { SubcategoryWithImage } from "@/types/category";
+import type { SubcategoryBonus, SubcategoryWithImage } from "@/types/category";
 
-export const mockSubcategories: Record<string, SubcategoryWithImage[]> = {
-  "1": [
-    { _id: "1a", name: "Tivi", slug: "tivi", image: "/images/subcategories/tivi.jpg" },
-    { _id: "1b", name: "Máy lạnh", slug: "may-lanh", image: "/images/subcategories/may-lanh.jpg" },
-    { _id: "1c", name: "Máy giặt", slug: "may-giat", image: "/images/subcategories/may-giat.jpg" },
-  ],
-  "2": [
-    { _id: "2a", name: "Nồi cơm điện", slug: "noi-com", image: "/images/subcategories/noi-com.jpg" },
-    { _id: "2b", name: "Máy xay sinh tố", slug: "may-xay", image: "/images/subcategories/may-xay.jpg" },
-  ],
-  "3": [
-    { _id: "3a", name: "Tai nghe", slug: "tai-nghe", image: "/images/subcategories/tai-nghe.jpg" },
-    { _id: "3b", name: "Cáp sạc", slug: "cap-sac", image: "/images/subcategories/cap-sac.jpg" },
-  ],
-};
+export const mockSubcategories: SubcategoryBonus[] = [
+  // --- Category 1: Điện tử - Điện máy ---
+  {
+    _id: "1a",
+    categoryId: "1",
+    name: "Tivi",
+    slug: "tivi",
+    description: "Các dòng tivi thông minh, 4K, OLED từ Samsung, LG, Sony...",
+    image: "/images/subcategories/tivi.jpg",
+    banner: "/images/banners/tivi-banner.jpg",
+  
+  },
+  {
+    _id: "1b",
+    categoryId: "1",
+    name: "Máy lạnh",
+    slug: "may-lanh",
+    description: "Máy lạnh tiết kiệm điện, công nghệ Inverter, nhiều thương hiệu.",
+    image: "/images/subcategories/may-lanh.jpg",
+    banner: "/images/banners/maylanh-banner.jpg",
+  
+  
+  },
+  {
+    _id: "1c",
+    categoryId: "1",
+    name: "Máy giặt",
+    slug: "may-giat",
+    description: "Máy giặt cửa trước, cửa trên, giặt sấy tiện lợi.",
+    image: "/images/subcategories/may-giat.jpg",
+    banner: "/images/banners/maygiat-banner.jpg",
+  
+   
+  },
+
+  // --- Category 2: Gia dụng ---
+  {
+    _id: "2a",
+    categoryId: "2",
+    name: "Nồi cơm điện",
+    slug: "noi-com",
+    description: "Nồi cơm điện nắp gài, cao tần, đa năng từ Panasonic, Sharp, Philips.",
+    image: "/images/subcategories/noi-com.jpg",
+    banner: "/images/banners/noicom-banner.jpg",
+    
+  },
+  {
+    _id: "2b",
+    categoryId: "2",
+    name: "Máy xay sinh tố",
+    slug: "may-xay",
+    description: "Máy xay mini, cầm tay, công suất cao.",
+    image: "/images/subcategories/may-xay.jpg",
+    banner: "/images/banners/mayxay-banner.jpg",
+  
+  },
+
+  // --- Category 3: Phụ kiện & Âm thanh ---
+  {
+    _id: "3a",
+    categoryId: "3",
+    name: "Tai nghe",
+    slug: "tai-nghe",
+    description: "Tai nghe Bluetooth, chụp tai, gaming, chống ồn.",
+    image: "/images/subcategories/tai-nghe.jpg",
+    banner: "/images/banners/tainghe-banner.jpg",
+   
+  },
+  {
+    _id: "3b",
+    categoryId: "3",
+    name: "Cáp sạc",
+    slug: "cap-sac",
+    description: "Cáp sạc nhanh USB-C, Lightning, Micro, từ Anker, Baseus, Ugreen.",
+    image: "/images/subcategories/cap-sac.jpg",
+    banner: "/images/banners/capsac-banner.jpg",
+    
+  },
+];
+

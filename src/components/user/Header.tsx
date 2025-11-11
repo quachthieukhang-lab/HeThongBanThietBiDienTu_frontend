@@ -25,14 +25,21 @@ export function Header() {
   const [subMap, setSubMap] = useState<Record<string, SubcategoryLite[]>>({});
 
   const handleHoverCategory = async (categoryId: string) => {
-    if (subMap[categoryId]) return;
-    try {
-      const subs = await fetchSubcategories(categoryId);
-      setSubMap((prev) => ({ ...prev, [categoryId]: subs }));
-    } catch (err) {
-      console.error("Lỗi tải subcategory:", err);
-    }
-  };
+  if (subMap[categoryId]) return; // đã load rồi thì thôi
+  try {
+    const subs = await fetchSubcategories(categoryId);
+
+    // Chắc chắn luôn là mảng, dù BE trả object hay array
+    const subsArray = Array.isArray(subs) ? subs : [subs];
+
+    setSubMap((prev) => ({ ...prev, [categoryId]: subsArray }));
+
+    console.log("Updated subMap:", { ...subMap, [categoryId]: subsArray });
+  } catch (err) {
+    console.error("Lỗi tải subcategory:", err);
+  }
+};
+
 
   /** --- UI --- */
   return (
@@ -75,16 +82,23 @@ export function Header() {
                 >
                   <h4 className="font-semibold text-gray-800 mb-2">{cat.name}</h4>
                   <ul className="space-y-1 text-sm text-gray-600">
-                    {(subMap[cat._id] || []).map((sub) => (
-                      <li key={sub._id}>
-                        <Link
-                          href={`/category/${sub.slug}`}
-                          className="hover:text-blue-600"
-                        >
-                          {sub.name}
-                        </Link>
-                      </li>
-                    ))}
+                    
+                    {Array.isArray(subMap[cat._id]) ? (
+                      subMap[cat._id].map((sub) => (
+                        <li key={sub._id}>
+                          <Link href={`/category/${sub.slug}`} className="hover:text-blue-600">
+                            {sub.name}
+                           
+                          </Link>
+                        </li>
+                      ))
+                    ) : (
+                      <p className="text-xs text-gray-400 italic">
+                        {!subMap[cat._id] ? "Đang tải..." : "Không có dữ liệu"}
+                      </p>
+                    )}
+                 
+
                   </ul>
                   {!subMap[cat._id] && (
                     <p className="text-xs text-gray-400 italic">Đang tải...</p>
@@ -97,11 +111,11 @@ export function Header() {
 
         {/* --- Thanh tìm kiếm --- */}
         <div className="flex items-center w-full max-w-md border rounded-xl px-3 py-2 bg-gray-50">
-          <Search className="text-gray-500 mr-2" />
+          <Search className="text-blue-500 mr-2" />
           <input
             type="text"
             placeholder="Tìm kiếm sản phẩm..."
-            className="w-full outline-none bg-transparent"
+            className="w-full outline-none bg-transparent text-blue-600"
           />
         </div>
 

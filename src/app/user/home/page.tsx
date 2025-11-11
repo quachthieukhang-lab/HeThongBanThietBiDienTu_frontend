@@ -3,13 +3,16 @@ import  BannerSection  from "@/components/user/home/BannerSection";
 import  SubcategoriesSection  from "@/components/user/home/SubcategoriesSection";
 import BrandList from "@/components/user/home/BrandList";
 import ProductList from "@/components/user/product/ProductList";
+import WishlistSection from "@/components/user/home/WishListSection";
 export default function Home() {
   
   return (
-    <div className=" mx-auto px-12 py-12 space-y-5">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_#e0f2fe,_#ffffff)] mx-auto px-12 py-12 space-y-5">
+    {/* <div className="min-h-screen bg-gradient-to-b from-blue-50 via-white to-white mx-auto px-12 py-12 space-y-5"> */}
         <BannerSection />
         <SubcategoriesSection />
         <BrandList />
+        <WishlistSection />
         <ProductList />
       <h1>Welcome to the Home Page</h1>
       <p>This is the main landing page of the application.</p>
