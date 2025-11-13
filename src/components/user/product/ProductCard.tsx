@@ -2,7 +2,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Heart } from "lucide-react";
-import { useWishlist } from "@/hooks/useWishlist";
+import { useWishlist } from "@/hooks/useWishList";
 import type { ProductLite } from "@/types/product";
 
 export default function ProductCard({ product }: { product: ProductLite }) {
@@ -16,38 +16,56 @@ export default function ProductCard({ product }: { product: ProductLite }) {
       : `${priceFrom.toLocaleString("vi-VN")}₫ - ${priceTo.toLocaleString("vi-VN")}₫`;
 
   return (
-    <div className="group relative bg-white rounded-xl p-4 border border-gray-100 hover:shadow-md transition flex flex-col">
-      {/* ❤️ Icon */}
+    <div className="group relative bg-white rounded-lg border border-gray-200 hover:shadow-lg transition-all duration-300 flex flex-col overflow-hidden">
+      {/* Wishlist Button */}
       <button
         onClick={() => toggleWishlist(product)}
-        className="absolute top-3 right-3 z-10"
+        className="absolute top-3 right-3 z-10 p-2 bg-white/80 backdrop-blur-sm rounded-full hover:bg-white transition-all"
         title={inWishlist ? "Bỏ khỏi yêu thích" : "Thêm vào yêu thích"}
       >
         <Heart
-          className={`w-6 h-6 transition-all duration-200 transform hover:scale-110 ${
-            inWishlist ? "fill-red-400 text-red-500" : "text-gray-400 hover:text-red-400 hover:fill-red-100"
+          className={`w-4 h-4 transition-all ${
+            inWishlist 
+              ? "fill-red-500 text-red-500" 
+              : "text-gray-400 hover:text-red-400"
           }`}
         />
       </button>
 
-      {/* Ảnh sản phẩm */}
-      <Link href={`/product/${slug}`} className="relative h-36 md:h-48 lg:h-60 mb-3 rounded-lg overflow-hidden bg-gray-50">
+      {/* Product Image */}
+      <Link 
+        href={`/product/${slug}`} 
+        className="relative aspect-square mb-3 bg-gray-100 overflow-hidden"
+      >
         {thumbnail && (
           <Image
-            src={thumbnail}
+            src={`http://localhost:3000/${thumbnail}`}
             alt={name}
             fill
-            className="object-cover group-hover:scale-105 transition"
+            className="object-cover group-hover:scale-105 transition duration-300"
+            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
           />
         )}
       </Link>
 
-      {/* Nội dung */}
-      <Link href={`/product/${slug}`} className="flex flex-col flex-1 hover:text-blue-500">
-        <h3 className="text-sm font-medium line-clamp-2 mb-1">{name}</h3>
-        <p className="text-yellow-500 text-xs font-light mb-1">Online giá quá rẻ</p>
-        <p className="text-red-500 text-sm font-semibold">{showPrice}</p>
-      </Link>
+      {/* Product Info */}
+      <div className="p-3 flex flex-col flex-1">
+        <Link href={`/product/${slug}`} className="flex flex-col flex-1">
+          <h3 className="text-sm font-medium text-gray-900 line-clamp-2 mb-2 hover:text-blue-600 transition-colors">
+            {name}
+          </h3>
+          
+          <div className="mt-auto space-y-2">
+            <div className="text-xs text-green-600 font-medium">
+              Online giá rẻ
+            </div>
+            
+            <div className="text-base font-semibold text-red-600">
+              {showPrice}
+            </div>
+          </div>
+        </Link>
+      </div>
     </div>
   );
 }

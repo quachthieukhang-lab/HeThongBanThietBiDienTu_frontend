@@ -5,107 +5,179 @@ import { useState, useMemo } from "react";
 import type { ReviewLite } from "@/types/review";
 
 interface Props {
-  reviews: ReviewLite[]; // tất cả review đã fetch từ page
-  total: number;         // tổng số review
-  limit?: number;        // số review hiển thị ban đầu (mặc định 3)
+  reviews: ReviewLite[];
+  total: number;
+  limit?: number;
 }
 
 export default function ProductReview({ reviews, total, limit = 3 }: Props) {
   const [showAll, setShowAll] = useState(false);
-
-  // Reviews để hiển thị
   const reviewsToShow = showAll ? reviews : reviews.slice(0, limit);
 
-  // --- Tính rating trung bình ---
-  const avgRating = useMemo(() => {
-    if (!reviewsToShow.length) return 0;
-    const sum = reviewsToShow.reduce((acc, r) => acc + r.rating, 0);
-    return sum / reviewsToShow.length;
-  }, [reviewsToShow]);
+  // Tính rating trung bình và phân bố
+  const { avgRating, ratingDistribution } = useMemo(() => {
+    if (!reviews.length) return { avgRating: 0, ratingDistribution: [] };
+    
+    const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
+    const avg = sum / reviews.length;
+    
+    // Tính phân bố rating
+    const distribution = [5, 4, 3, 2, 1].map(star => ({
+      stars: star,
+      count: reviews.filter(r => r.rating === star).length,
+      percentage: (reviews.filter(r => r.rating === star).length / reviews.length) * 100
+    }));
+    
+    return { avgRating: avg, ratingDistribution: distribution };
+  }, [reviews]);
+
+  const StarRating = ({ rating, size = "sm" }: { rating: number; size?: "sm" | "md" }) => (
+    <div className="flex items-center gap-1">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <div
+          key={star}
+          className={`${
+            size === "md" ? "w-5 h-5" : "w-4 h-4"
+          } ${
+            star <= rating ? "text-yellow-400" : "text-gray-300"
+          }`}
+        >
+          ★
+        </div>
+      ))}
+    </div>
+  );
 
   return (
-    <div className="bg-gray-100 p-4 md:p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="bg-white py-8">
+      <div className="max-w-4xl mx-auto px-4 space-y-8">
         
-        {/* Header: avg rating */}
-        <div className="  bg-white p-4 rounded-lg shadow-sm">
-          {<h2 className="text-lg font-semibold mb-3 text-blue-600" >Đánh giá sản phẩm </h2>}
-          <div className="flex items-center gap-2">
-               
-            <div className="flex items-center text-yellow-500 text-lg">
-             {<p>Đánh giá :</p>}
-              {Array.from({ length: 5 }).map((_, idx) => (
-                <span key={idx} className={idx < Math.round(avgRating) ? "fas" : "far"}>
-                  ★
-                </span>
+        {/* Header với rating summary */}
+        <div className="border-b border-gray-200 pb-6">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Đánh giá sản phẩm</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Overall rating */}
+            <div className="text-center">
+              <div className="text-5xl font-bold text-gray-900 mb-2">
+                {avgRating.toFixed(1)}
+              </div>
+              <StarRating rating={Math.round(avgRating)} size="md" />
+              <div className="text-gray-600 text-sm mt-2">
+                {total} đánh giá
+              </div>
+            </div>
+
+            {/* Rating distribution */}
+            <div className="md:col-span-2 space-y-2">
+              {ratingDistribution.map(({ stars, count, percentage }) => (
+                <div key={stars} className="flex items-center gap-3">
+                  <span className="text-sm text-gray-600 w-4">{stars}★</span>
+                  <div className="flex-1 bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-yellow-400 h-2 rounded-full" 
+                      style={{ width: `${percentage}%` }}
+                    />
+                  </div>
+                  <span className="text-sm text-gray-600 w-12 text-right">
+                    {count}
+                  </span>
+                </div>
               ))}
             </div>
-            
-            <span className="font-semibold text-gray-800">{avgRating.toFixed(1)}/5</span>
           </div>
-          <span className="text-gray-500 text-sm">{total} đánh giá</span>
         </div>
 
         {/* Review list */}
         {reviewsToShow.length === 0 ? (
-          <div className="text-gray-500 text-center py-6">Chưa có đánh giá nào</div>
+          <div className="text-center py-12">
+            <div className="text-gray-400 text-6xl mb-4">★</div>
+            <p className="text-gray-500 text-lg">Chưa có đánh giá nào</p>
+            <p className="text-gray-400 text-sm mt-2">Hãy là người đầu tiên đánh giá sản phẩm này</p>
+          </div>
         ) : (
-          reviewsToShow.map((review) => (
-            <div key={review._id} className="bg-white p-4 rounded-lg shadow-sm space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  {review.userId?.avatarUrl ? (
-                    <Image
-                      src={review.userId.avatarUrl}
-                      alt={review.userId.name}
-                      width={40}
-                      height={40}
-                      className="rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-white font-bold">
-                      {review.userId?.name?.[0] || "U"}
+          <div className="space-y-6">
+            {reviewsToShow.map((review) => {
+              const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+              
+              return (
+                <div key={review._id} className="border-b border-gray-100 pb-6 last:border-0">
+                  {/* User info & date */}
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      {review.userId?.avatarUrl ? (
+                        <Image
+                          src={review.userId.avatarUrl}
+                          alt={review.userId.name}
+                          width={44}
+                          height={44}
+                          className="rounded-full object-cover border"
+                        />
+                      ) : (
+                        <div className="w-11 h-11 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg">
+                          {review.userId?.name?.[0]?.toUpperCase() || "U"}
+                        </div>
+                      )}
+                      <div>
+                        <div className="font-medium text-gray-900">
+                          {review.userId?.name || "Người dùng"}
+                        </div>
+                        <StarRating rating={review.rating} />
+                      </div>
                     </div>
-                  )}
-                  <span className="font-medium">{review.userId?.name || "Người dùng"}</span>
+                    <span className="text-sm text-gray-500">
+                      {new Date(review.createdAt).toLocaleDateString("vi-VN")}
+                    </span>
+                  </div>
+
+                  {/* Review content */}
+                  <div className="space-y-3">
+                    {review.title && (
+                      <h3 className="font-semibold text-gray-900 text-lg">
+                        {review.title}
+                      </h3>
+                    )}
+                    
+                    <p className="text-gray-700 leading-relaxed">
+                      {review.content}
+                    </p>
+
+                    {/* Review images */}
+                    {review.images && review.images.length > 0 && (
+                      <div className="flex gap-3 overflow-x-auto py-2">
+                        {review.images.map((img, idx) => {
+                          const imageUrl = img.startsWith("http") || img.startsWith("/")
+                            ? img
+                            : `${apiBase}/${img}`;
+
+                          return (
+                            <div key={idx} className="w-24 h-24 relative flex-shrink-0 rounded-lg border border-gray-200 overflow-hidden">
+                              <Image
+                                src={imageUrl}
+                                alt={`review-${idx}`}
+                                fill
+                                className="object-cover hover:scale-105 transition-transform cursor-pointer"
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <span className="text-sm text-gray-500">
-                  {new Date(review.createdAt).toLocaleDateString("vi-VN")}
-                </span>
-              </div>
-
-              <div className="flex items-center gap-1 text-yellow-500">
-                {Array.from({ length: 5 }).map((_, idx) => (
-                  <span key={idx} className={idx < review.rating ? "fas" : "far"}>
-                    ★
-                  </span>
-                ))}
-              </div>
-
-              {review.title && <h3 className="font-semibold">{review.title}</h3>}
-              <p className="text-gray-700 text-sm">{review.content}</p>
-
-              {review.images && review.images.length > 0 && (
-                <div className="flex gap-2 overflow-x-auto mt-2">
-                  {review.images.map((img, idx) => (
-                    <div key={idx} className="w-20 h-20 relative flex-shrink-0 rounded border">
-                      <Image src={img} alt={`review-${idx}`} fill className="object-cover rounded" />
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))
+              );
+            })}
+          </div>
         )}
 
-        {/* Nút xem tất cả */}
+        {/* Load more button */}
         {!showAll && total > limit && (
-          <div className="text-center mt-4">
+          <div className="text-center pt-4">
             <button
-              className="px-4 py-2 bg-blue-300 text-white rounded-lg"
+              className="px-8 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
               onClick={() => setShowAll(true)}
             >
-              Xem tất cả đánh giá
+              Xem thêm {total - limit} đánh giá
             </button>
           </div>
         )}

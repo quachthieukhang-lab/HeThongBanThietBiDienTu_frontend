@@ -3,7 +3,21 @@
 import Image from "next/image";
 import { useState } from "react";
 import type { ProductLite, ProductVariant } from "@/types/product";
-
+import {
+  StarIcon,
+  HeartIcon,
+  PhotoIcon,
+  ShieldCheckIcon,
+  ArrowPathIcon,
+  WrenchScrewdriverIcon,
+  HomeIcon,
+  CogIcon,
+  CheckBadgeIcon,
+  TruckIcon,
+  ShoppingBagIcon,
+  PlusIcon,
+  PhoneIcon,
+} from "@heroicons/react/24/outline";
 interface Props {
   product: ProductLite;
   variants: ProductVariant[];
@@ -21,126 +35,218 @@ export default function ProductMainInfo({ product, variants }: Props) {
   const comparePrice = selectedVariant?.compareAtPrice || priceTo;
 
   return (
-    <div className="bg-gray-100 p-4 md:p-6">
-      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-6">
-
-        {/* Cột trái: Tên + Gallery + Cam kết */}
-        <div className="space-y-4">
-          {/* Tên sản phẩm trên cùng */}
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
-            <h1 className="text-2xl font-semibold">{name}</h1>
-         
-
-          {/* Gallery ảnh */}
-          <div className="bg-white p-4 rounded-lg shadow-sm">
-            <div className="relative w-full aspect-[4/3] mb-3">
-              {currentImage ? (
-                <Image src={currentImage} alt={name} fill className="object-contain rounded" />
-              ) : (
-                <div className="flex items-center justify-center w-full h-full text-gray-400">
-                  Không có hình ảnh
+          {/* Cột trái - Gallery & Thông tin */}
+          <div className="lg:col-span-8 space-y-6">
+            
+            {/* Tên sản phẩm */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900 mb-2">{name}</h1>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-1">
+                      <div className="flex text-amber-400">
+                        {[...Array(5)].map((_, i) => (
+                          <StarIcon key={i} className="w-5 h-5 fill-current" />
+                        ))}
+                      </div>
+                    
+                    </div>
+                    <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
+                    <span className="text-sm text-green-600 font-medium">✓ Còn hàng</span>
+                  </div>
                 </div>
-              )}
+                <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                  <HeartIcon className="w-6 h-6 text-gray-400 hover:text-red-500" />
+                </button>
+              </div>
             </div>
 
-            {/* Gallery thumbnail */}
-            {images.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto">
-                {images.map((img, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setCurrentImage(img)}
-                    className={`relative w-20 h-20 rounded border flex-shrink-0 ${
-                      currentImage === img ? "border-blue-500" : "border-gray-300"
-                    }`}
-                  >
-                    <Image src={img} alt={`Thumbnail ${idx}`} fill className="object-cover rounded" />
-                  </button>
+            {/* Gallery ảnh */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 p-6">
+                
+                {/* Thumbnail sidebar */}
+                {images.length > 1 && (
+                  <div className="lg:col-span-2 lg:order-first">
+                    <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0">
+                      {images.map((img, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => setCurrentImage(img)}
+                          className={`relative w-16 h-16 rounded-xl border-2 flex-shrink-0 transition-all ${
+                            currentImage === img 
+                              ? "border-blue-500 shadow-md scale-105" 
+                              : "border-gray-200 hover:border-gray-300"
+                          }`}
+                        >
+                          <Image 
+                            src={img} 
+                            alt={`Thumbnail ${idx}`} 
+                            fill 
+                            className="object-cover rounded-lg" 
+                            sizes="64px"
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Main image */}
+                <div className={`relative ${images.length > 1 ? 'lg:col-span-10' : 'col-span-full'}`}>
+                  <div className="aspect-[4/3] bg-gray-50 rounded-2xl overflow-hidden">
+                    {currentImage ? (
+                      <Image 
+                        src={currentImage} 
+                        alt={name} 
+                        fill 
+                        className="object-contain transition-transform duration-300 hover:scale-105" 
+                        priority
+                        sizes="(max-width: 1024px) 100vw, 80vw"
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center w-full h-full text-gray-400">
+                        <PhotoIcon className="w-16 h-16 opacity-50" />
+                        <span className="ml-2">Không có hình ảnh</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Cam kết & chính sách */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
+                <ShieldCheckIcon className="w-6 h-6 text-blue-600" />
+                Cam kết từ Điện Máy
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[
+                  { icon: ArrowPathIcon, text: "Hư gì đổi nấy 12 tháng tận nhà (miễn phí tháng đầu)" },
+                  { icon: WrenchScrewdriverIcon, text: "Bảo hành chính hãng 2 năm, có người đến tận nhà" },
+                  { icon: HomeIcon, text: "Lắp đặt miễn phí lúc giao hàng" },
+                  { icon: CogIcon, text: "Bảo hành phụ kiện 12 tháng" },
+                  { icon: CheckBadgeIcon, text: "Đầy đủ các phụ kiện, thiết bị kèm theo" },
+                  { icon: TruckIcon, text: "Giao hàng nhanh trong 2 giờ" }
+                ].map((item, index) => (
+                  <div key={index} className="flex items-start gap-3 p-3 rounded-lg hover:bg-blue-50 transition-colors">
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <item.icon className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <span className="text-gray-700 flex-1">{item.text}</span>
+                  </div>
                 ))}
               </div>
-            )}
-          </div>
-
-          {/* Cam kết & chính sách */}
-          <div className="bg-white p-4 rounded-lg shadow-sm">
-            <h2 className="text-lg font-semibold mb-3 text-blue-600">Điện Máy cam kết</h2>
-            <ul className="space-y-2 text-gray-700 text-sm">
-              <li className="flex items-start gap-2">
-                <span className="text-blue-600 font-bold">✔</span>
-                <span>Hư gì đổi nấy 12 tháng tận nhà (miễn phí tháng đầu)</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-blue-600 font-bold">✔</span>
-                <span>Bảo hành chính hãng 2 năm, có người đến tận nhà</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-blue-600 font-bold">✔</span>
-                <span>Lắp đặt miễn phí lúc giao hàng</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-blue-600 font-bold">✔</span>
-                <span>Bảo hành phụ kiện 12 tháng</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-blue-600 font-bold">✔</span>
-                <span>Đầy đủ các phụ kiện, thiết bị kèm theo</span>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        {/* Cột phải: Thông tin sản phẩm + Variant + Nút */}
-        <div className="space-y-4 mt-12">
-          <div className="bg-white p-4 rounded-lg shadow-sm">
-            {/* Giá */}
-            <div className="mb-4">
-              {comparePrice && comparePrice > displayPrice ? (
-                <div className="flex items-center gap-2">
-                  <span className="text-red-600 text-xl font-bold">{displayPrice.toLocaleString()}₫</span>
-                  <span className="line-through text-gray-400">{comparePrice.toLocaleString()}₫</span>
-                </div>
-              ) : (
-                <span className="text-xl font-bold">{displayPrice.toLocaleString()}₫</span>
-              )}
             </div>
+          </div>
 
-            {/* Variant */}
-            {variants.length > 0 && (
-              <div className="mb-4">
-                <h3 className="text-sm font-medium text-gray-700 mb-1">Chọn phiên bản:</h3>
-                <div className="flex flex-wrap gap-2">
-                  {variants.map((v) => {
-                    const variantLabel = Object.values(v.attributes).join(" / ") || "Mặc định";
-                    return (
-                      <button
-                        key={v._id}
-                        onClick={() => setSelectedVariant(v)}
-                        className={`px-3 py-1 border rounded text-sm ${
-                          selectedVariant?._id === v._id
-                            ? "border-blue-500 bg-blue-50"
-                            : "border-gray-300"
-                        }`}
-                      >
-                        {variantLabel}
-                      </button>
-                    );
-                  })}
+          {/* Cột phải - Thông tin mua hàng */}
+          <div className="lg:col-span-4">
+            <div className="sticky top-6 space-y-6">
+              
+              {/* Box giá & mua hàng */}
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+                
+                {/* Giá */}
+                <div className="mb-6">
+                  {comparePrice && comparePrice > displayPrice ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-3">
+                        <span className="text-3xl font-bold text-red-600">
+                          {displayPrice.toLocaleString('vi-VN')}₫
+                        </span>
+                        <span className="px-2 py-1 bg-red-100 text-red-700 text-sm font-medium rounded-full">
+                          -{Math.round((1 - displayPrice/comparePrice) * 100)}%
+                        </span>
+                      </div>
+                      <span className="line-through text-gray-400 text-lg">
+                        {comparePrice.toLocaleString('vi-VN')}₫
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-3xl font-bold text-gray-900">
+                      {displayPrice.toLocaleString('vi-VN')}₫
+                    </span>
+                  )}
+                </div>
+
+                {/* Variant selector */}
+                {variants.length > 0 && (
+                  <div className="mb-6">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-3">Phiên bản:</h3>
+                    <div className="grid grid-cols-2 gap-2">
+                      {variants.map((v) => {
+                        const variantLabel = Object.values(v.attributes).join(" / ") || "Mặc định";
+                        return (
+                          <button
+                            key={v._id}
+                            onClick={() => setSelectedVariant(v)}
+                            className={`p-3 border-2 rounded-xl text-sm font-medium transition-all ${
+                              selectedVariant?._id === v._id
+                                ? "border-blue-500 bg-blue-50 text-blue-700 shadow-sm"
+                                : "border-gray-200 hover:border-gray-300 text-gray-700"
+                            }`}
+                          >
+                            {variantLabel}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Action buttons */}
+                <div className="space-y-3">
+                  <button className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 flex items-center justify-center gap-2">
+                    <ShoppingBagIcon className="w-5 h-5" />
+                    Mua ngay
+                  </button>
+                  <button className="w-full border-2 border-blue-600 text-blue-600 py-4 rounded-xl font-semibold hover:bg-blue-50 transition-all flex items-center justify-center gap-2">
+                    <PlusIcon className="w-5 h-5" />
+                    Thêm vào giỏ hàng
+                  </button>
+                </div>
+
+                {/* Additional info */}
+                <div className="mt-4 space-y-2 text-sm text-gray-600">
+                  <div className="flex items-center gap-2">
+                    <TruckIcon className="w-4 h-4" />
+                    <span>Giao hàng miễn phí toàn quốc</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <ArrowPathIcon className="w-4 h-4" />
+                    <span>Đổi trả trong 30 ngày</span>
+                  </div>
                 </div>
               </div>
-            )}
 
-            {/* Nút hành động */}
-            <div className="flex gap-4 mt-4">
-              <button className="flex-1 bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">
-                Thêm vào giỏ hàng
-              </button>
-              <button className="flex-1 bg-red-600 text-white py-2 rounded hover:bg-red-700 transition">
-                Mua ngay
-              </button>
+              {/* Support card */}
+              <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-6 text-white">
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <PhoneIcon className="w-5 h-5" />
+                  Hỗ trợ 24/7
+                </h3>
+                <p className="text-gray-300 text-sm mb-4">Chúng tôi luôn sẵn sàng hỗ trợ bạn</p>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                    <span className="text-sm">Tư vấn kỹ thuật: 1800 1234</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                    <span className="text-sm">Khiếu nại: 1800 5678</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-
       </div>
     </div>
   );
