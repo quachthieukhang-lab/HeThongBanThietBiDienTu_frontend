@@ -22,8 +22,8 @@ export async function apiFetch(url: string, options: RequestInit = {}) {
     headers
   })
 
-  const res = await fetch(fullUrl, { 
-    ...options, 
+  const res = await fetch(fullUrl, {
+    ...options,
     headers,
   })
 
