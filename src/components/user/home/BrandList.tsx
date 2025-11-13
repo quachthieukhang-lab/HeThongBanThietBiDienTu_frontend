@@ -7,8 +7,10 @@ import { BrandLite } from '@/types/brand'
 import { apiClient } from "@/lib/apiClient";
 import { mockApi } from "@/mock";
 export default function BrandList() {
-   const fetchBrands = async (): Promise<BrandLite[]> =>
-    apiClient("/brands", mockApi.getBrands);
+   const fetchBrands = async (): Promise<BrandLite[]> => {
+  const res = await apiClient<any>("/brands", mockApi.getBrands);
+  return Array.isArray(res) ? res : res.items ?? [];
+};
 
   const { data: brands, error, isLoading } = useSWR<BrandLite[]>("brands", fetchBrands);
 
@@ -28,7 +30,7 @@ export default function BrandList() {
           >
             {brand.logoUrl ? (
               <Image
-                src={brand.logoUrl}
+                src={`http://localhost:3000/${brand.logoUrl}`}
                 alt={brand.name}
                 width={64}
                 height={64}

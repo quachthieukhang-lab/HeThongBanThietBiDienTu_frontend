@@ -48,6 +48,6 @@ export interface Subcategory {
 }
 
 // Bản rút gọn cho FE (Header, danh mục con,...)
-export type SubcategoryLite = Pick<Subcategory, "_id" | "name" | "slug">;
-export type SubcategoryWithImage = Pick<Subcategory, "_id" | "name" | "slug" | "image">;
-export type SubcategoryBonus = Pick<Subcategory, "_id" | "name" | "categoryId"| "slug" | "banner" | "image" | "description">;
+export type SubcategoryLite = Pick<Subcategory, "_id" | "name" | "slug" | "categoryId" | "icon" | "isActive" | "sortOrder">;
+export type SubcategoryWithImage = Pick<Subcategory, "_id" | "name" | "slug" | "icon" | "sortOrder" | "isActive" | "categoryId">;
+export type SubcategoryBonus = Pick<Subcategory, "_id" | "name" | "categoryId"| "slug" | "banner" | "icon" | "description" | "sortOrder" | "isActive">;

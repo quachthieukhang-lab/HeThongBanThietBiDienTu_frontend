@@ -7,8 +7,8 @@ export default function WishlistSection() {
 
   if (wishlist.length === 0) {
     return (
-      <div className="text-center py-10 text-gray-500">
-        💔 Chưa có sản phẩm nào trong danh sách yêu thích.
+      <div className="text-center text-gray-500">
+        
       </div>
     );
   }
