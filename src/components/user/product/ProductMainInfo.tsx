@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import type { ProductLite, ProductVariant } from "@/types/product";
+import { useCart } from "@/hooks/useCart";
 import {
   StarIcon,
   HeartIcon,
@@ -25,12 +26,13 @@ interface Props {
 
 export default function ProductMainInfo({ product, variants }: Props) {
   const { name, images = [], priceFrom, priceTo } = product;
-
+  const { addToCart, buyNow } = useCart();
   const [currentImage, setCurrentImage] = useState<string>(images[0] || "");
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
     variants[0] || null
   );
-
+ 
+  
   const displayPrice = selectedVariant?.price || priceFrom;
   const comparePrice = selectedVariant?.compareAtPrice || priceTo;
 
@@ -203,15 +205,21 @@ export default function ProductMainInfo({ product, variants }: Props) {
 
                 {/* Action buttons */}
                 <div className="space-y-3">
-                  <button className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 flex items-center justify-center gap-2">
-                    <ShoppingBagIcon className="w-5 h-5" />
-                    Mua ngay
-                  </button>
-                  <button className="w-full border-2 border-blue-600 text-blue-600 py-4 rounded-xl font-semibold hover:bg-blue-50 transition-all flex items-center justify-center gap-2">
-                    <PlusIcon className="w-5 h-5" />
-                    Thêm vào giỏ hàng
-                  </button>
-                </div>
+        <button
+          onClick={() => buyNow(product,selectedVariant ?? undefined)}
+          className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 flex items-center justify-center gap-2"
+        >
+          <ShoppingBagIcon className="w-5 h-5" />
+          Mua ngay
+        </button>
+        <button
+          onClick={() => addToCart(product, selectedVariant ?? undefined)}
+          className="w-full border-2 border-blue-600 text-blue-600 py-4 rounded-xl font-semibold hover:bg-blue-50 transition-all flex items-center justify-center gap-2"
+        >
+          <PlusIcon className="w-5 h-5" />
+          Thêm vào giỏ hàng
+        </button>
+      </div>
 
                 {/* Additional info */}
                 <div className="mt-4 space-y-2 text-sm text-gray-600">
