@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
-import { X, Plus, Trash2, Upload } from 'lucide-react'
+import { X, Plus, Trash2, Upload, ChevronDown } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { apiFetch } from '@/lib/api'
 
@@ -23,6 +23,20 @@ interface Product {
   _id: string
   name: string
   thumbnail?: string
+  templateId: string
+}
+
+interface AttributeTemplate {
+  _id: string
+  attributes: Array<{
+    key: string
+    type: 'string' | 'number' | 'boolean' | 'enum' | 'multienum'
+    required?: boolean
+    options?: (string | number)[]
+    min?: number
+    max?: number
+    filterable?: boolean
+  }>
 }
 
 export default function ProductVariantModal({ 
@@ -44,28 +58,70 @@ export default function ProductVariantModal({
     stock: 0,
   })
   const [loading, setLoading] = useState(false)
-  const [newAttribute, setNewAttribute] = useState({ key: '', value: '' })
   const [products, setProducts] = useState<Product[]>([])
+  const [attributeTemplates, setAttributeTemplates] = useState<Record<string, AttributeTemplate>>({})
+  const [currentTemplate, setCurrentTemplate] = useState<AttributeTemplate | null>(null)
   const [images, setImages] = useState<FileList | null>(null)
   const [imagePreviews, setImagePreviews] = useState<string[]>([])
+  const [selectedAttribute, setSelectedAttribute] = useState('')
 
-  const fetchProducts = async () => {
+  // Fetch products và attribute templates
+  const fetchProductsAndTemplates = async () => {
     try {
-      const res = await apiFetch(`${backendUrl}/products?limit=100`)
-      if (!res.ok) throw new Error('Failed to fetch products')
-      const data = await res.json()
-      setProducts(data.items || [])
+      const [productsRes, templatesRes] = await Promise.all([
+        apiFetch(`${backendUrl}/products?limit=100`),
+        apiFetch(`${backendUrl}/attribute-templates?limit=100`)
+      ])
+
+      if (!productsRes.ok) throw new Error('Failed to fetch products')
+      if (!templatesRes.ok) throw new Error('Failed to fetch attribute templates')
+
+      const productsData = await productsRes.json()
+      const templatesData = await templatesRes.json()
+
+      const productsList = productsData.items || []
+      setProducts(productsList)
+
+      const templatesMap: Record<string, AttributeTemplate> = {}
+      templatesData.items?.forEach((template: AttributeTemplate) => {
+        templatesMap[template._id] = template
+      })
+      setAttributeTemplates(templatesMap)
+
     } catch (err: any) {
-      console.error('Fetch products error:', err)
-      toast.error('Lỗi khi tải danh sách sản phẩm')
+      console.error('Fetch data error:', err)
+      toast.error('Lỗi khi tải dữ liệu')
     }
   }
 
   useEffect(() => {
     if (open) {
-      fetchProducts()
+      fetchProductsAndTemplates()
     }
   }, [open])
+
+  useEffect(() => {
+    if (form.productId) {
+      const selectedProduct = products.find(p => p._id === form.productId)
+      if (selectedProduct && selectedProduct.templateId) {
+        const template = attributeTemplates[selectedProduct.templateId]
+        setCurrentTemplate(template)
+        
+        // QUAN TRỌNG: Chỉ reset attributes khi tạo mới, không reset khi cập nhật
+        if (!editing) {
+          setForm(prev => ({ ...prev, attributes: [] }))
+        }
+      } else {
+        setCurrentTemplate(null)
+        // Tương tự, chỉ reset khi tạo mới
+        if (!editing) {
+          setForm(prev => ({ ...prev, attributes: [] }))
+        }
+      }
+    } else {
+      setCurrentTemplate(null)
+    }
+  }, [form.productId, products, attributeTemplates, editing]) // Thêm editing vào dependency
 
   useEffect(() => {
     if (editing) {
@@ -99,29 +155,171 @@ export default function ProductVariantModal({
       })
       setImages(null)
       setImagePreviews([])
+      setSelectedAttribute('')
     }
   }, [editing])
 
+  // Thêm thuộc tính từ dropdown
   const handleAddAttribute = () => {
-    if (!newAttribute.key.trim()) {
-      toast.error('Vui lòng nhập key cho thuộc tính')
+    if (!selectedAttribute) {
+      toast.error('Vui lòng chọn thuộc tính')
       return
+    }
+
+    const attributeDef = currentTemplate?.attributes.find(attr => attr.key === selectedAttribute)
+    if (!attributeDef) return
+
+    const existingIndex = form.attributes.findIndex(attr => attr.key === selectedAttribute)
+    if (existingIndex >= 0) {
+      toast.error(`Thuộc tính "${selectedAttribute}" đã được thêm`)
+      return
+    }
+
+    let defaultValue: any = ''
+    
+    switch (attributeDef.type) {
+      case 'number':
+        defaultValue = attributeDef.min || 0
+        break
+      case 'boolean':
+        defaultValue = false
+        break
+      case 'enum':
+      case 'multienum':
+        defaultValue = attributeDef.options?.[0] || ''
+        break
+      default:
+        defaultValue = ''
     }
 
     setForm(prev => ({
       ...prev,
-      attributes: [...prev.attributes, { ...newAttribute }]
+      attributes: [...prev.attributes, { 
+        key: selectedAttribute, 
+        value: defaultValue 
+      }]
     }))
-    setNewAttribute({ key: '', value: '' })
+    setSelectedAttribute('')
   }
 
-  const handleRemoveAttribute = (index: number) => {
+  // Cập nhật giá trị thuộc tính
+  const handleUpdateAttributeValue = (key: string, value: any) => {
     setForm(prev => ({
       ...prev,
-      attributes: prev.attributes.filter((_, i) => i !== index)
+      attributes: prev.attributes.map(attr => 
+        attr.key === key ? { ...attr, value } : attr
+      )
     }))
   }
 
+  const handleRemoveAttribute = (key: string) => {
+    setForm(prev => ({
+      ...prev,
+      attributes: prev.attributes.filter(attr => attr.key !== key)
+    }))
+  }
+
+  // Render input control dựa trên type của attribute
+  const renderAttributeInput = (attribute: Attribute, attributeDef: any) => {
+    if (!attributeDef) return null
+
+    const baseClass = "w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+
+    switch (attributeDef.type) {
+      case 'string':
+        return (
+          <input
+            type="text"
+            value={attribute.value || ''}
+            onChange={e => handleUpdateAttributeValue(attribute.key, e.target.value)}
+            className={baseClass}
+            placeholder={`Nhập ${attribute.key}`}
+          />
+        )
+      
+      case 'number':
+        return (
+          <input
+            type="number"
+            value={attribute.value || 0}
+            onChange={e => handleUpdateAttributeValue(attribute.key, parseFloat(e.target.value) || 0)}
+            min={attributeDef.min}
+            max={attributeDef.max}
+            className={baseClass}
+          />
+        )
+      
+      case 'boolean':
+        return (
+          <select
+            value={attribute.value ? 'true' : 'false'}
+            onChange={e => handleUpdateAttributeValue(attribute.key, e.target.value === 'true')}
+            className={baseClass}
+          >
+            <option value="false">Không</option>
+            <option value="true">Có</option>
+          </select>
+        )
+      
+      case 'enum':
+        return (
+          <select
+            value={attribute.value || ''}
+            onChange={e => handleUpdateAttributeValue(attribute.key, e.target.value)}
+            className={baseClass}
+          >
+            <option value="">Chọn {attribute.key}</option>
+            {attributeDef.options?.map((option: any) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        )
+      
+      case 'multienum':
+        return (
+          <select
+            multiple
+            value={Array.isArray(attribute.value) ? attribute.value : []}
+            onChange={e => {
+              const selected = Array.from(e.target.selectedOptions, option => option.value)
+              handleUpdateAttributeValue(attribute.key, selected)
+            }}
+            className={`${baseClass} h-20`}
+            size={Math.min(attributeDef.options?.length || 1, 4)}
+          >
+            {attributeDef.options?.map((option: any) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        )
+      
+      default:
+        return (
+          <input
+            type="text"
+            value={attribute.value || ''}
+            onChange={e => handleUpdateAttributeValue(attribute.key, e.target.value)}
+            className={baseClass}
+          />
+        )
+    }
+  }
+
+  // Lấy danh sách thuộc tính chưa được thêm
+  const getAvailableAttributes = () => {
+    if (!currentTemplate) return []
+    
+    const currentAttributeKeys = form.attributes.map(attr => attr.key)
+    return currentTemplate.attributes.filter(attr => !currentAttributeKeys.includes(attr.key))
+  }
+
+  const availableAttributes = getAvailableAttributes()
+
+  // Các hàm xử lý ảnh
   const handleImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
     setImages(files)
@@ -160,7 +358,6 @@ export default function ProductVariantModal({
         })
         setImages(dt.files.length > 0 ? dt.files : null)
         
-        // Update previews
         const updatedPreviews = imagePreviews.filter((_, i) => i !== index)
         setImagePreviews(updatedPreviews)
       }
@@ -180,18 +377,23 @@ export default function ProductVariantModal({
       return
     }
 
-    if (form.price < 0) {
-      toast.error('Giá không được âm')
+    if (!currentTemplate) {
+      toast.error('Không tìm thấy template thuộc tính cho sản phẩm này')
       return
     }
 
-    if (form.stock < 0) {
-      toast.error('Tồn kho không được âm')
-      return
+    // Validate required attributes
+    const requiredAttributes = currentTemplate.attributes.filter(attr => attr.required)
+    for (const reqAttr of requiredAttributes) {
+      const hasAttribute = form.attributes.some(attr => attr.key === reqAttr.key)
+      if (!hasAttribute) {
+        toast.error(`Thiếu thuộc tính bắt buộc: ${reqAttr.key}`)
+        return
+      }
     }
 
-    // Validate file size and type
-    const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+    // Validate file uploads
+    const MAX_FILE_SIZE = 20 * 1024 * 1024;
     const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/svg+xml'];
 
     if (images) {
@@ -216,8 +418,7 @@ export default function ProductVariantModal({
       
       const attributesObj: Record<string, any> = {}
       form.attributes.forEach(attr => {
-        const numValue = parseFloat(attr.value)
-        attributesObj[attr.key] = isNaN(numValue) ? attr.value : numValue
+        attributesObj[attr.key] = attr.value
       })
       data.append('attributes', JSON.stringify(attributesObj))
       
@@ -227,7 +428,6 @@ export default function ProductVariantModal({
       }
       data.append('stock', form.stock.toString())
 
-      // Append image files
       if (images && images.length > 0) {
         Array.from(images).forEach((file) => {
           data.append('images', file)
@@ -275,6 +475,7 @@ export default function ProductVariantModal({
                   onChange={e => setForm(prev => ({ ...prev, productId: e.target.value }))}
                   className="w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   required
+                  disabled={!!editing} // Không cho phép thay đổi sản phẩm khi cập nhật
                 >
                   <option value="">Chọn sản phẩm</option>
                   {products.map(product => (
@@ -283,6 +484,11 @@ export default function ProductVariantModal({
                     </option>
                   ))}
                 </select>
+                {editing && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Không thể thay đổi sản phẩm khi cập nhật biến thể
+                  </p>
+                )}
               </div>
 
               <div>
@@ -309,54 +515,105 @@ export default function ProductVariantModal({
             </div>
 
             {/* Attributes Section */}
-            <div className="border rounded p-4">
-              <label className="block text-sm font-medium mb-2">Thuộc tính</label>
-              
-              <div className="grid grid-cols-3 gap-2 mb-3">
-                <input
-                  type="text"
-                  placeholder="Key (ví dụ: color)"
-                  value={newAttribute.key}
-                  onChange={e => setNewAttribute(prev => ({ ...prev, key: e.target.value }))}
-                  className="border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-                <input
-                  type="text"
-                  placeholder="Value (ví dụ: red)"
-                  value={newAttribute.value}
-                  onChange={e => setNewAttribute(prev => ({ ...prev, value: e.target.value }))}
-                  className="border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-                <button
-                  type="button"
-                  onClick={handleAddAttribute}
-                  className="bg-gray-100 text-gray-700 px-3 py-2 rounded hover:bg-gray-200 flex items-center justify-center gap-1"
-                >
-                  <Plus size={16} />
-                  Thêm
-                </button>
+            <div className="border rounded-lg p-4 bg-gray-50">
+              <div className="flex items-center justify-between mb-4">
+                <label className="block text-sm font-semibold text-gray-700">Thuộc tính biến thể</label>
+                <span className="text-xs text-gray-500">
+                  {form.attributes.length} thuộc tính đã thêm
+                </span>
               </div>
 
+              {/* Dropdown chọn thuộc tính - cùng hàng */}
+              {currentTemplate && availableAttributes.length > 0 && (
+                <div className="flex gap-3 mb-4">
+                  <div className="flex-1">
+                    <select
+                      value={selectedAttribute}
+                      onChange={(e) => setSelectedAttribute(e.target.value)}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
+                    >
+                      <option value="">Chọn thuộc tính để thêm...</option>
+                      {availableAttributes.map(attr => (
+                        <option key={attr.key} value={attr.key}>
+                          {attr.key} {attr.required && '(*)'} - {attr.type}
+                          {attr.options && ` (${attr.options.length} options)`}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleAddAttribute}
+                    disabled={!selectedAttribute}
+                    className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
+                  >
+                    <Plus size={16} />
+                    Thêm
+                  </button>
+                </div>
+              )}
+
+              {/* Hiển thị các thuộc tính đã thêm - dạng card */}
               {form.attributes.length > 0 && (
-                <div className="space-y-2">
-                  {form.attributes.map((attr, index) => (
-                    <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
-                      <span className="flex-1">
-                        <strong>{attr.key}:</strong> {attr.value}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveAttribute(index)}
-                        className="text-red-600 hover:text-red-700 p-1"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  ))}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {form.attributes.map((attr) => {
+                    const attributeDef = currentTemplate?.attributes.find(a => a.key === attr.key)
+                    return (
+                      <div key={attr.key} className="bg-white rounded-lg border p-3 shadow-sm">
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-sm text-gray-800">
+                              {attr.key}
+                            </span>
+                            {attributeDef?.required && (
+                              <span className="text-xs text-red-500 bg-red-50 px-1.5 py-0.5 rounded">Bắt buộc</span>
+                            )}
+                            <span className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                              {attributeDef?.type}
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveAttribute(attr.key)}
+                            className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 rounded transition-colors"
+                            title="Xóa thuộc tính"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                        <div className="space-y-1">
+                          {renderAttributeInput(attr, attributeDef)}
+                          {attributeDef?.options && attributeDef.type !== 'enum' && attributeDef.type !== 'multienum' && (
+                            <div className="text-xs text-gray-500">
+                              Có sẵn: {attributeDef.options.join(', ')}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+
+              {!currentTemplate && form.productId && (
+                <div className="text-center py-4">
+                  <div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                  <p className="text-sm text-gray-600">Đang tải template thuộc tính...</p>
+                </div>
+              )}
+
+              {currentTemplate && form.attributes.length === 0 && (
+                <div className="text-center py-6 border-2 border-dashed border-gray-300 rounded-lg">
+                  <div className="text-gray-400 mb-2">
+                    <Plus size={32} className="mx-auto" />
+                  </div>
+                  <p className="text-sm text-gray-600">Chưa có thuộc tính nào</p>
+                  <p className="text-xs text-gray-500 mt-1">Chọn thuộc tính từ dropdown để thêm</p>
                 </div>
               )}
             </div>
 
+            {/* Price, Compare Price, Stock Section */}
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-1">Giá *</label>
