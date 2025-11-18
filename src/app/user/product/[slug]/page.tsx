@@ -3,14 +3,14 @@
 import { useParams } from "next/navigation";
 import useSWR from "swr";
 import { apiClient } from "@/lib/apiClient";
-import { useSlugToIdMap } from "@/hooks/useSlugtoIdMap";
+import { useSlugToIdMap } from "@/app/user/hooks/useSlugtoIdMap";
 
 import ProductMainInfo from "@/components/user/product/ProductMainInfo";
 import ProductSpecs from "@/components/user/product/ProductSpecs";
 import ProductReview from "@/components/user/product/ProductReview";
 
-import type { ProductLite, ProductVariant } from "@/types/product";
-import type { ReviewLite, PaginatedReviews } from "@/types/review";
+import type { ProductLite, ProductVariant } from "@/app/user/types/product";
+import type { ReviewLite, PaginatedReviews } from "@/app/user/types/review";
 
 export default function ProductDetailPage() {
   const { slug } = useParams();

@@ -1,5 +1,5 @@
 "use client";
-import { useCart, CartItem } from "@/hooks/useCart";
+import { useCart, CartItem } from "@/app/user/hooks/useCart";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import * as AlertDialog from "@radix-ui/react-alert-dialog";

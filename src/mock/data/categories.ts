@@ -1,4 +1,4 @@
-import type { CategoryLite } from "@/types/category";
+import type { CategoryLite } from "@/app/user/types/category";
 
 export const mockCategories: CategoryLite[] = [
   { _id: "1", name: "Điện tử - Điện máy", slug: "dien-tu-dien-may" },

@@ -3,9 +3,10 @@
 import { useState } from "react";
 import useSWR from "swr";
 import Link from "next/link";
-import type { SubcategoryWithImage } from "@/types/category";
+import type { SubcategoryWithImage } from "@/app/user/types/category";
 import { apiClient } from "@/lib/apiClient";
-
+import FAIcon from "@/components/user/home/FAIcon";
+import { getFAIcon } from "@/lib/getFAIcon";
 export default function SubcategoriesSection() {
   const [showAll, setShowAll] = useState(false);
 
@@ -49,48 +50,64 @@ export default function SubcategoriesSection() {
     ? featuredSubcategories
     : featuredSubcategories.slice(0, initialDisplayCount);
  
-  return (
-    <section className="py-10">
-      <h2 className="text-2xl font-semibold mb-6 text-center">
-        Danh mục sản phẩm nổi bật
-      </h2>
 
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-6 justify-center">
-        {displayList.map((s) => (
-          <Link
-            key={s._id}
-            href={`/subcategories/${s.slug}`} // chỉ hiển thị slug trong URL
-            className="group bg-white shadow-md rounded-2xl p-4 flex flex-col items-center transition hover:shadow-lg hover:-translate-y-1"
-          >
-            <div className="w-16 h-16 mb-3 flex items-center justify-center overflow-hidden rounded-xl text-2xl">
-              <i className={s.icon}></i>
-            </div>
-            <p className="text-base font-medium group-hover:text-primary">{s.name}</p>
-          </Link>
-        ))}
+return (
+    <section className="py-16 bg-slate-50">
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-slate-800 mb-3">
+            Thiết Bị Điện Tử
+          </h2>
+          <p className="text-slate-600 text-lg">
+            Khám phá công nghệ mới nhất cho cuộc sống hiện đại
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-5">
+          
+          {displayList.map((s) => {
+  console.log("ICON RAW:", s.icon, " → ", getFAIcon(s.icon));
+
+  return (
+    <Link
+      key={s._id}
+      href={`/user/subcategories/${s.slug}`}
+      className="group bg-white rounded-xl p-5 flex flex-col items-center text-center border border-slate-200 shadow-xs hover:shadow-md hover:border-slate-300 transition-all duration-300 hover:-translate-y-1"
+    >
+      <div className="w-16 h-16 mb-4 flex items-center justify-center bg-slate-100 rounded-xl group-hover:bg-slate-200 transition-colors">
+        {s.icon ? (
+          <FAIcon
+            icon={s.icon}
+            className="w-8 h-8 text-slate-700 group-hover:text-slate-900"
+          />
+        ) : (
+          <div className="w-8 h-8 rounded bg-slate-200" />
+        )}
       </div>
 
-      {featuredSubcategories.length > initialDisplayCount && (
-        <div className="flex justify-center mt-6 gap-4">
-          <button
-            onClick={() => setShowAll((s) => !s)}
-            className="px-4 py-2 rounded-md border border-primary text-blue-400 font-bold  hover:bg-indigo-400 hover:text-white cursor-pointer transition"
-          >
-            {showAll
-              ? "Thu gọn"
-              : `Xem thêm danh mục (${featuredSubcategories.length - initialDisplayCount})`}
-          </button>
+      <p className="text-sm font-medium text-slate-700 group-hover:text-slate-900 transition-colors leading-tight">
+        {s.name}
+      </p>
+    </Link>
+  );
+})}
 
-          {showAll && (
-            <Link
-              href="/subcategories"
-              className="px-4 py-2 rounded-md border border-primary text-blue-400 font-bold hover:bg-indigo-400 hover:text-white cursor-pointer transition"
-            >
-              Xem tất cả
-            </Link>
-          )}
+          
         </div>
-      )}
+        
+        {featuredSubcategories.length > initialDisplayCount && (
+          <div className="flex justify-center mt-12">
+            <button
+              onClick={() => setShowAll((s) => !s)}
+              className="px-8 py-3 bg-slate-800 text-white font-medium rounded-lg hover:bg-slate-700 transition-colors shadow-sm hover:shadow-md"
+            >
+              {showAll
+                ? "Thu Gọn"
+                : `Xem Thêm ${featuredSubcategories.length - initialDisplayCount} Danh Mục`}
+            </button>
+          </div>
+        )}
+      </div>
     </section>
   );
 }

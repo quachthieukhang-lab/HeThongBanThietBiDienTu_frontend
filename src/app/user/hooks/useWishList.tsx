@@ -1,7 +1,7 @@
 // src/hooks/useWishlist.ts
 "use client";
 import { useState, useEffect } from "react";
-import type { ProductLite } from "@/types/product";
+import type { ProductLite } from "@/app/user/types/product";
 
 const STORAGE_KEY = "wishlist";
 

@@ -1,6 +1,6 @@
 "use client";
 
-import type { ProductLite, ProductVariant } from "@/types/product";
+import type { ProductLite, ProductVariant } from "@/app/user/types/product";
 
 interface Props {
   product: ProductLite;

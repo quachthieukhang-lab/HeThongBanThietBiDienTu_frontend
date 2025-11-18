@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import type { ProductLite, ProductVariant } from "@/types/product";
+import type { ProductLite, ProductVariant } from "@/app/user/types/product";
 
 export interface CartItem {
   productId: string;

@@ -1,13 +1,16 @@
 "use client";
+
 import Link from "next/link";
 import { ShoppingCart, User, Search, ChevronDown, Loader2 } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import useSWR from "swr";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { apiClient } from "@/lib/apiClient";
-import type { CategoryLite, SubcategoryWithImage } from "@/types/category";
+import type { CategoryLite, SubcategoryWithImage } from "@/app/user/types/category";
 
 export function Header() {
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  
   const fetchCategories = async (): Promise<CategoryLite[]> => {
     const res = await apiClient<any>("/categories");
     return Array.isArray(res) ? res : res.items ?? [];
@@ -33,25 +36,39 @@ export function Header() {
     }
   };
 
-  // Navigation items
+  useEffect(() => {
+    // Lấy user info từ localStorage
+    const userInfo = localStorage.getItem("userInfo");
+    if (userInfo) {
+      const user = JSON.parse(userInfo);
+      setUserEmail(user.email);
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("userInfo");
+    localStorage.removeItem("userRole");
+    window.location.href = "/";
+  };
+
   const navItems = [
-    { name: "Tất cả sản phẩm", href: "/products" },
-    { name: "Máy lạnh", href: "/subcategories/may-lanh" },
-    { name: "Máy giặt", href: "/subcategories/may-giat" },
-    { name: "Tủ lạnh", href: "/subcategories/tu-lanh" },
-    { name: "Tivi", href: "/subcategories/tivi" },
-    { name: "Máy lọc nước", href: "/subcategories/may-loc-nuoc" },
-    { name: "Khuyến mãi", href: "/khuyen-mai" },
-    { name: "Hỗ trợ", href: "/support" }
+    { name: "Tất cả sản phẩm", href: "/user/products" },
+    { name: "Máy lạnh", href: "/user/subcategories/may-lanh" },
+    { name: "Máy giặt", href: "/user/subcategories/may-giat" },
+    { name: "Tủ lạnh", href: "/user/subcategories/tu-lanh" },
+    { name: "Tivi", href: "/user/subcategories/tivi" },
+    { name: "Máy lọc nước", href: "/user/subcategories/may-loc-nuoc" },
+    { name: "Khuyến mãi", href: "/user/khuyen-mai" },
+    { name: "Hỗ trợ", href: "/user/support" }
   ];
 
   return (
     <header className="sticky top-0 z-50 bg-gradient-to-r from-gray-700 via-blue-800 to-purple-600 shadow-xl border-b border-blue-500/20">
-      {/* Main Header */}
       <div className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between gap-8">
-          
-          {/* Logo với hiệu ứng neon */}
+          {/* Logo */}
           <Link href="/" className="flex-shrink-0">
             <div className="text-2xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent drop-shadow-lg">
               Điện Máy <span className="text-white">Tech</span>
@@ -72,7 +89,6 @@ export function Header() {
                 className="bg-gray-900 shadow-2xl rounded-lg overflow-hidden w-[800px] flex border border-cyan-500/30 animate-in fade-in-0 zoom-in-95"
                 sideOffset={8}
               >
-                {/* Categories Column */}
                 <div className="w-[35%] bg-gray-800 border-r border-cyan-500/20 overflow-y-auto max-h-[480px]">
                   {!categories && !error && (
                     <div className="flex justify-center py-8">
@@ -95,7 +111,6 @@ export function Header() {
                   ))}
                 </div>
 
-                {/* Subcategories Column */}
                 <div className="w-[65%] p-6 overflow-y-auto max-h-[480px] bg-gray-900">
                   {activeCat && subMap[activeCat] ? (
                     <div className="grid grid-cols-2 gap-4">
@@ -110,7 +125,6 @@ export function Header() {
                             <div className="font-medium text-white group-hover:text-cyan-300">
                               {sub.name}
                             </div>
-                        
                           </div>
                         </Link>
                       ))}
@@ -130,7 +144,7 @@ export function Header() {
             </DropdownMenu.Portal>
           </DropdownMenu.Root>
 
-          {/* Search Bar - Glass morphism */}
+          {/* Search Bar */}
           <div className="flex-1 max-w-2xl">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-cyan-400" size={20} />
@@ -142,7 +156,7 @@ export function Header() {
             </div>
           </div>
 
-          {/* User Actions với icon đẹp */}
+          {/* User & Cart */}
           <div className="flex items-center gap-6">
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
@@ -150,7 +164,9 @@ export function Header() {
                   <div className="p-2 bg-white/10 rounded-lg">
                     <User size={18} className="text-cyan-400" />
                   </div>
-                  <span className="hidden sm:block">Tài khoản</span>
+                   <span className="hidden sm:block">
+      {userEmail || "Tài khoản"}
+    </span>
                 </button>
               </DropdownMenu.Trigger>
               <DropdownMenu.Portal>
@@ -158,21 +174,33 @@ export function Header() {
                   className="bg-gray-800 shadow-2xl rounded-lg p-2 w-48 animate-in fade-in-0 zoom-in-95 border border-cyan-500/30" 
                   sideOffset={8}
                 >
-                  <DropdownMenu.Item className="p-3 hover:bg-cyan-900/50 rounded-md cursor-pointer text-white">
-                    <Link href="/auth/login" className="w-full block">🔐 Đăng nhập</Link>
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Item className="p-3 hover:bg-cyan-900/50 rounded-md cursor-pointer text-white">
-                    <Link href="/auth/register" className="w-full block">📝 Đăng ký</Link>
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Separator className="h-px bg-cyan-500/30 my-1" />
-                  <DropdownMenu.Item className="p-3 hover:bg-cyan-900/50 rounded-md cursor-pointer text-white">
-                    <Link href="/account/orders">📦 Đơn hàng của tôi</Link>
-                  </DropdownMenu.Item>
+                  {userEmail ? (
+                    <>
+                      <DropdownMenu.Item className="p-3 hover:bg-cyan-900/50 rounded-md cursor-pointer text-white">
+                        <Link href="/user/orders">📦 Đơn hàng của tôi</Link>
+                      </DropdownMenu.Item>
+                      <DropdownMenu.Item
+                        className="p-3 hover:bg-cyan-900/50 rounded-md cursor-pointer text-white"
+                        onSelect={handleLogout}
+                      >
+                        🔓 Đăng xuất
+                      </DropdownMenu.Item>
+                    </>
+                  ) : (
+                    <>
+                      <DropdownMenu.Item className="p-3 hover:bg-cyan-900/50 rounded-md cursor-pointer text-white">
+                        <Link href="/auth/Login" className="w-full block">🔐 Đăng nhập</Link>
+                      </DropdownMenu.Item>
+                      <DropdownMenu.Item className="p-3 hover:bg-cyan-900/50 rounded-md cursor-pointer text-white">
+                        <Link href="/auth/Register" className="w-full block">📝 Đăng ký</Link>
+                      </DropdownMenu.Item>
+                    </>
+                  )}
                 </DropdownMenu.Content>
               </DropdownMenu.Portal>
             </DropdownMenu.Root>
 
-            <Link href="/cart" className="relative flex items-center gap-2 text-white/80 hover:text-cyan-300 transition-colors font-medium hover:scale-105">
+            <Link href="/user/cart" className="relative flex items-center gap-2 text-white/80 hover:text-cyan-300 transition-colors font-medium hover:scale-105">
               <div className="p-2 bg-white/10 rounded-lg relative">
                 <ShoppingCart size={18} className="text-cyan-400" />
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center shadow-lg border border-white/20">
@@ -185,7 +213,7 @@ export function Header() {
         </div>
       </div>
 
-      {/* Navigation - Glass effect */}
+      {/* Navigation */}
       <nav className="border-t border-white/10 bg-white/5 backdrop-blur-sm">
         <div className="container mx-auto px-6">
           <ul className="flex items-center gap-8 py-1 text-sm font-medium">

@@ -3,7 +3,7 @@
 import useSWR from 'swr'
 import Image from 'next/image'
 import Link from 'next/link'
-import { BrandLite } from '@/types/brand'
+import { BrandLite } from '@/app/user/types/brand'
 import { apiClient } from "@/lib/apiClient";
 import { mockApi } from "@/mock";
 export default function BrandList() {

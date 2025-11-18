@@ -2,11 +2,11 @@ import { mockGetCategories } from "./handlers/categories";
 import { mockGetSubcategories, mockGetSubcategoryBySlug } from "./handlers/subcategories";
 import { mockGetProductsBySubcategoryId } from "./handlers/product";
 import { mockGetReviewsByProductId } from "./handlers/review"; 
-import type { CategoryLite, SubcategoryBonus, SubcategoryLite, SubcategoryWithImage } from "@/types/category";
-import type { BrandLite } from "@/types/brand";
-import type { ProductLite } from "@/types/product";
-import type { ProductVariant } from "@/types/product";
-import type { PaginatedReviews, Review, ReviewLite } from "@/types/review";
+import type { CategoryLite, SubcategoryBonus, SubcategoryLite, SubcategoryWithImage } from "@/app/user/types/category";
+import type { BrandLite } from "@/app/user/types/brand";
+import type { ProductLite } from "@/app/user/types/product";
+import type { ProductVariant } from "@/app/user/types/product";
+import type { PaginatedReviews, Review, ReviewLite } from "@/app/user/types/review";
 
 import { mock } from "node:test";
 // Bật/tắt mock dựa trên biến môi trường
