@@ -7,10 +7,13 @@ import useSWR from "swr";
 import { useState, useEffect } from "react";
 import { apiClient } from "@/lib/apiClient";
 import type { CategoryLite, SubcategoryWithImage } from "@/app/user/types/category";
+import AddressList from "@/components/user/home/AddressList";
+import { useCartStore } from "@/app/user/hooks/cartStore";
 
 export function Header() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
-  
+   const cartCount = useCartStore((state) => state.cartCount);
+   
   const fetchCategories = async (): Promise<CategoryLite[]> => {
     const res = await apiClient<any>("/categories");
     return Array.isArray(res) ? res : res.items ?? [];
@@ -66,21 +69,22 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 bg-gradient-to-r from-gray-700 via-blue-800 to-purple-600 shadow-xl border-b border-blue-500/20">
-      <div className="container mx-auto px-6 py-4">
-        <div className="flex items-center justify-between gap-8">
-          {/* Logo */}
+      {/* Top Section - Logo, Search, User Actions */}
+      <div className="mx-auto px-8 py-3">
+        <div className="flex items-center justify-between ml-10px gap-6">
+          {/* Logo - Chiếm ít không gian hơn */}
           <Link href="/" className="flex-shrink-0">
-            <div className="text-2xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent drop-shadow-lg">
+            <div className="text-xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent drop-shadow-lg whitespace-nowrap">
               Điện Máy <span className="text-white">Tech</span>
             </div>
           </Link>
 
-          {/* Categories Dropdown */}
+          {/* Categories Dropdown - Thu gọn lại */}
           <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
-              <button className="flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-4 py-3 rounded-lg hover:from-cyan-600 hover:to-blue-700 transition-all font-medium min-w-[140px] justify-center shadow-lg hover:shadow-cyan-500/25">
+              <button className="flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-3 py-2 rounded-lg hover:from-cyan-600 hover:to-blue-700 transition-all font-medium min-w-[120px] justify-center shadow-lg hover:shadow-cyan-500/25 text-sm">
                 <span>📱 Danh mục</span>
-                <ChevronDown size={16} />
+                <ChevronDown size={14} />
               </button>
             </DropdownMenu.Trigger>
 
@@ -144,29 +148,35 @@ export function Header() {
             </DropdownMenu.Portal>
           </DropdownMenu.Root>
 
-          {/* Search Bar */}
-          <div className="flex-1 max-w-2xl">
+          {/* Search Bar - Chiếm nhiều không gian hơn */}
+          <div className="flex-1 max-w-3xl min-w-[300px]">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-cyan-400" size={20} />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-cyan-400" size={18} />
               <input
                 type="text"
-                placeholder="🔍 Tìm kiếm iPhone, Samsung, Macbook..."
-                className="w-full pl-10 pr-4 py-3 bg-white/10 backdrop-blur-sm border border-cyan-500/30 rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition-all text-white placeholder-white/60"
+                placeholder="🔍 Tìm kiếm iPhone, Samsung, Macbook, Máy lạnh, Tủ lạnh..."
+                className="w-full pl-8 pr-4 py-2 bg-white/10 backdrop-blur-sm border border-cyan-500/30 rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition-all text-white placeholder-white/60 text-sm"
               />
             </div>
           </div>
 
-          {/* User & Cart */}
-          <div className="flex items-center gap-6">
+          {/* User & Cart & Address - Sắp xếp gọn gàng */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {/* Address Selector */}
+            <div className="min-w-[200px]">
+              <AddressList />
+            </div>
+
+            {/* User Menu */}
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
-                <button className="flex items-center gap-2 text-white/80 hover:text-cyan-300 transition-colors font-medium hover:scale-105">
-                  <div className="p-2 bg-white/10 rounded-lg">
-                    <User size={18} className="text-cyan-400" />
+                <button className="flex items-center gap-2 text-white/80 hover:text-cyan-300 transition-colors font-medium hover:scale-105 text-sm">
+                  <div className="p-1.5 bg-white/10 rounded-lg">
+                    <User size={16} className="text-cyan-400" />
                   </div>
-                   <span className="hidden sm:block">
-      {userEmail || "Tài khoản"}
-    </span>
+                  <span className="hidden sm:block max-w-[100px] truncate">
+                    {userEmail || "Tài khoản"}
+                  </span>
                 </button>
               </DropdownMenu.Trigger>
               <DropdownMenu.Portal>
@@ -176,11 +186,11 @@ export function Header() {
                 >
                   {userEmail ? (
                     <>
-                      <DropdownMenu.Item className="p-3 hover:bg-cyan-900/50 rounded-md cursor-pointer text-white">
-                        <Link href="/user/orders">📦 Đơn hàng của tôi</Link>
+                      <DropdownMenu.Item className="p-3 hover:bg-cyan-900/50 rounded-md cursor-pointer text-white text-sm">
+                        <Link href="/user/orders" className="w-full block">📦 Đơn hàng của tôi</Link>
                       </DropdownMenu.Item>
                       <DropdownMenu.Item
-                        className="p-3 hover:bg-cyan-900/50 rounded-md cursor-pointer text-white"
+                        className="p-3 hover:bg-cyan-900/50 rounded-md cursor-pointer text-white text-sm"
                         onSelect={handleLogout}
                       >
                         🔓 Đăng xuất
@@ -188,10 +198,10 @@ export function Header() {
                     </>
                   ) : (
                     <>
-                      <DropdownMenu.Item className="p-3 hover:bg-cyan-900/50 rounded-md cursor-pointer text-white">
+                      <DropdownMenu.Item className="p-3 hover:bg-cyan-900/50 rounded-md cursor-pointer text-white text-sm">
                         <Link href="/auth/Login" className="w-full block">🔐 Đăng nhập</Link>
                       </DropdownMenu.Item>
-                      <DropdownMenu.Item className="p-3 hover:bg-cyan-900/50 rounded-md cursor-pointer text-white">
+                      <DropdownMenu.Item className="p-3 hover:bg-cyan-900/50 rounded-md cursor-pointer text-white text-sm">
                         <Link href="/auth/Register" className="w-full block">📝 Đăng ký</Link>
                       </DropdownMenu.Item>
                     </>
@@ -200,12 +210,15 @@ export function Header() {
               </DropdownMenu.Portal>
             </DropdownMenu.Root>
 
-            <Link href="/user/cart" className="relative flex items-center gap-2 text-white/80 hover:text-cyan-300 transition-colors font-medium hover:scale-105">
-              <div className="p-2 bg-white/10 rounded-lg relative">
-                <ShoppingCart size={18} className="text-cyan-400" />
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center shadow-lg border border-white/20">
-                  3
-                </span>
+            {/* Cart */}
+            <Link href="/user/cart" className="relative flex items-center gap-2 text-white/80 hover:text-cyan-300 transition-colors font-medium hover:scale-105 text-sm">
+              <div className="p-1.5 bg-white/10 rounded-lg relative">
+                <ShoppingCart size={16} className="text-cyan-400" />
+                 {cartCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center shadow-lg border border-white/20">
+                      {cartCount > 99 ? '99+' : cartCount}
+                    </span>
+                  )}
               </div>
               <span className="hidden sm:block">Giỏ hàng</span>
             </Link>
@@ -213,15 +226,15 @@ export function Header() {
         </div>
       </div>
 
-      {/* Navigation */}
+      {/* Navigation - Full width */}
       <nav className="border-t border-white/10 bg-white/5 backdrop-blur-sm">
-        <div className="container mx-auto px-6">
-          <ul className="flex items-center gap-8 py-1 text-sm font-medium">
+        <div className="w-full px-4">
+          <ul className="flex items-center justify-center gap-6 py-1 text-sm font-medium overflow-x-auto scrollbar-hide">
             {navItems.map((item) => (
-              <li key={item.name}>
+              <li key={item.name} className="flex-shrink-0">
                 <Link 
                   href={item.href} 
-                  className="text-white/90 hover:text-cyan-300 transition-all py-2 block whitespace-nowrap hover:scale-105 border-b-2 border-transparent hover:border-cyan-400"
+                  className="text-white/90 hover:text-cyan-300 transition-all py-2 block whitespace-nowrap hover:scale-105 border-b-2 border-transparent hover:border-cyan-400 text-sm"
                 >
                   {item.name}
                 </Link>

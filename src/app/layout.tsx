@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import SWRProvider from "@/providers/SWRProvider";
 import { Theme } from "@radix-ui/themes";
+import { Toaster } from "react-hot-toast"; // Thêm import này
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -42,7 +43,34 @@ export default function RootLayout({
           scale="medium"
         >
           <SWRProvider>
-              {children}
+            {children}
+            {/* Thêm Toaster component ở đây */}
+            <Toaster 
+              position="bottom-right"
+              toastOptions={{
+                duration: 3000,
+                style: {
+                  background: '#363636',
+                  color: '#fff',
+                  fontSize: '14px',
+                  minWidth: '200px',
+                },
+                success: {
+                  duration: 3000,
+                  iconTheme: {
+                    primary: '#10b981',
+                    secondary: '#fff',
+                  },
+                },
+                error: {
+                  duration: 4000,
+                  iconTheme: {
+                    primary: '#ef4444',
+                    secondary: '#fff',
+                  },
+                },
+              }}
+            />
           </SWRProvider>
         </Theme>
       </body>
