@@ -4,6 +4,17 @@ import React from 'react'
 import { Pencil, Trash2, Image } from 'lucide-react'
 
 export default function ProductTable({ items = [], loading, onEdit, onHardDelete }: any) {
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000'
+
+  // Hàm xử lý URL ảnh
+  const getImageUrl = (imagePath: string) => {
+    if (!imagePath) return ''
+    // Nếu đã là URL đầy đủ thì giữ nguyên
+    if (imagePath.startsWith('http')) return imagePath
+    // Nếu là đường dẫn tương đối thì thêm base URL
+    return `${backendUrl}${imagePath.startsWith('/') ? '' : '/'}${imagePath}`
+  }
+
   return (
     <div className="rounded-lg border bg-white overflow-hidden shadow">
       <table className="min-w-full table-auto">
@@ -28,9 +39,20 @@ export default function ProductTable({ items = [], loading, onEdit, onHardDelete
               <tr key={p._id} className="hover:bg-indigo-50 transition">
                 <td className="px-4 py-2">
                   {p.thumbnail ? (
-                    <img src={p.thumbnail} alt={p.name} className="w-12 h-12 object-cover rounded" />
+                    <img 
+                      src={getImageUrl(p.thumbnail)} 
+                      alt={p.name} 
+                      className="w-12 h-12 object-cover rounded"
+                      onError={(e) => {
+                        // Fallback nếu ảnh không load được
+                        console.error('Failed to load image:', p.thumbnail)
+                        e.currentTarget.style.display = 'none'
+                      }}
+                    />
                   ) : (
-                    <Image size={24} className="text-gray-400" />
+                    <div className="w-12 h-12 flex items-center justify-center bg-gray-100 rounded">
+                      <Image size={24} className="text-gray-400" />
+                    </div>
                   )}
                 </td>
                 <td className="px-4 py-2">{p.name}</td>
@@ -60,4 +82,3 @@ export default function ProductTable({ items = [], loading, onEdit, onHardDelete
     </div>
   )
 }
-
