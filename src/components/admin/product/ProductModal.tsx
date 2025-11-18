@@ -15,6 +15,7 @@ interface ProductModalProps {
 }
 
 export default function ProductModal({ open, onClose, onCreate, onUpdate, editing }: ProductModalProps) {
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000'
   const [form, setForm] = useState<any>({
     name: '',
     slug: '',
@@ -34,35 +35,129 @@ export default function ProductModal({ open, onClose, onCreate, onUpdate, editin
   const [filteredSubcategories, setFilteredSubcategories] = useState<any[]>([])
 
   // Fetch categories, subcategories, brands
-  useEffect(() => {
-    Promise.all([
-      apiFetch('/categories').then(r => r.json()),
-      apiFetch('/subcategories').then(r => r.json()),
-      apiFetch('/brands').then(r => r.json()),
-    ])
-      .then(([cat, sub, br]) => {
-        console.log('API Response - Categories:', cat)
-        console.log('API Response - Subcategories:', sub)
-        console.log('API Response - Brands:', br)
+  const fetchData = async () => {
+    try {
+      const [categoriesRes, brandsRes] = await Promise.all([
+        apiFetch(`${backendUrl}/categories`),
+        apiFetch(`${backendUrl}/brands`)
+      ])
+
+      if (!categoriesRes.ok || !brandsRes.ok) {
+        throw new Error('Failed to fetch data')
+      }
+
+      const categoriesData = await categoriesRes.json()
+      const brandsData = await brandsRes.json()
+
+      // Xử lý nhiều trường hợp cấu trúc response
+      const getItems = (data: any) => {
+        if (Array.isArray(data)) return data
+        if (data && Array.isArray(data.items)) return data.items
+        if (data && data.data && Array.isArray(data.data)) return data.data
+        return data || []
+      }
+
+      const categoriesItems = getItems(categoriesData)
+      const brandsItems = getItems(brandsData)
+
+      // Fetch ALL subcategories pages
+      let allSubcategories: any[] = []
+      let currentPage = 1
+      let totalPages = 1
+
+      do {
+        const subcategoriesRes = await apiFetch(`${backendUrl}/subcategories?page=${currentPage}&limit=100`)
+        if (!subcategoriesRes.ok) {
+          throw new Error('Failed to fetch subcategories')
+        }
         
-        setCategories(cat.items || [])
-        setSubcategories(sub.items || [])
-        setBrands(br.items || [])
+        const subcategoriesData = await subcategoriesRes.json()
+        const subcategoriesItems = getItems(subcategoriesData)
+        
+        allSubcategories = [...allSubcategories, ...subcategoriesItems]
+        
+        // Xác định tổng số trang
+        if (subcategoriesData.pages) {
+          totalPages = subcategoriesData.pages
+        } else if (subcategoriesData.total && subcategoriesData.limit) {
+          totalPages = Math.ceil(subcategoriesData.total / subcategoriesData.limit)
+        } else {
+          // Nếu không có thông tin phân trang, chỉ lấy trang đầu
+          totalPages = 1
+        }
+        
+        currentPage++
+      } while (currentPage <= totalPages)
+
+      console.log('Total categories:', categoriesItems.length)
+      console.log('Total subcategories:', allSubcategories.length)
+      console.log('Total brands:', brandsItems.length)
+
+      // Log để debug xem mỗi danh mục có bao nhiêu subcategories
+      categoriesItems.forEach((category: any) => {
+        const subcatsForCategory = allSubcategories.filter(s => {
+          if (!s.categoryId) return false
+          let subcatCategoryId
+          
+          if (typeof s.categoryId === 'object' && s.categoryId !== null && s.categoryId._id) {
+            subcatCategoryId = s.categoryId._id
+          } else if (typeof s.categoryId === 'string') {
+            subcatCategoryId = s.categoryId
+          } else if (typeof s.categoryId === 'object' && s.categoryId !== null && s.categoryId.$oid) {
+            subcatCategoryId = s.categoryId.$oid
+          } else {
+            return false
+          }
+          
+          return String(subcatCategoryId) === String(category._id)
+        })
+        
+        console.log(`Category "${category.name}" has ${subcatsForCategory.length} subcategories`)
       })
-      .catch(err => {
-        console.error('API Error:', err)
-        toast.error(err.message || 'Lỗi khi tải dữ liệu')
-      })
+
+      setCategories(categoriesItems)
+      setSubcategories(allSubcategories)
+      setBrands(brandsItems)
+      
+    } catch (err: any) {
+      console.error('Fetch data error:', err)
+      toast.error(err?.message || 'Lỗi khi tải dữ liệu danh mục')
+    }
+  }
+
+  useEffect(() => {
+    fetchData()
   }, [])
 
   // Filter subcategories when category changes
   useEffect(() => {
     if (form.categoryId) {
       const filtered = subcategories.filter(s => {
-        // So sánh dưới dạng string để tránh vấn đề kiểu dữ liệu
-        const subcatCategoryId = s.categoryId?._id || s.categoryId
+        if (!s.categoryId) return false
+        
+        // Xử lý tất cả các trường hợp categoryId
+        let subcatCategoryId
+        
+        // Trường hợp 1: categoryId là object đầy đủ (populated data)
+        if (typeof s.categoryId === 'object' && s.categoryId !== null && s.categoryId._id) {
+          subcatCategoryId = s.categoryId._id
+        }
+        // Trường hợp 2: categoryId là string trực tiếp
+        else if (typeof s.categoryId === 'string') {
+          subcatCategoryId = s.categoryId
+        }
+        // Trường hợp 3: categoryId là object với $oid (dạng MongoDB)
+        else if (typeof s.categoryId === 'object' && s.categoryId !== null && s.categoryId.$oid) {
+          subcatCategoryId = s.categoryId.$oid
+        }
+        else {
+          return false
+        }
+        
         return String(subcatCategoryId) === String(form.categoryId)
       })
+      
+      console.log('Selected categoryId:', form.categoryId)
       console.log('Filtered subcategories:', filtered)
       setFilteredSubcategories(filtered)
       
@@ -72,19 +167,55 @@ export default function ProductModal({ open, onClose, onCreate, onUpdate, editin
       }
     } else {
       setFilteredSubcategories([])
+      setForm(prev => ({ ...prev, subcategoryId: '' }))
     }
   }, [form.categoryId, subcategories, form.subcategoryId])
 
   // Reset form when editing changes
   useEffect(() => {
     if (editing) {
-      console.log('Editing product:', editing)
+      // Xử lý categoryId từ dữ liệu editing
+      let editingCategoryId = ''
+      if (editing.categoryId) {
+        if (typeof editing.categoryId === 'object' && editing.categoryId !== null && editing.categoryId.$oid) {
+          editingCategoryId = editing.categoryId.$oid
+        } else if (typeof editing.categoryId === 'object' && editing.categoryId !== null && editing.categoryId._id) {
+          editingCategoryId = editing.categoryId._id
+        } else if (typeof editing.categoryId === 'string') {
+          editingCategoryId = editing.categoryId
+        }
+      }
+
+      // Xử lý subcategoryId từ dữ liệu editing
+      let editingSubcategoryId = ''
+      if (editing.subcategoryId) {
+        if (typeof editing.subcategoryId === 'object' && editing.subcategoryId !== null && editing.subcategoryId.$oid) {
+          editingSubcategoryId = editing.subcategoryId.$oid
+        } else if (typeof editing.subcategoryId === 'object' && editing.subcategoryId !== null && editing.subcategoryId._id) {
+          editingSubcategoryId = editing.subcategoryId._id
+        } else if (typeof editing.subcategoryId === 'string') {
+          editingSubcategoryId = editing.subcategoryId
+        }
+      }
+
+      // Xử lý brandId từ dữ liệu editing
+      let editingBrandId = ''
+      if (editing.brandId) {
+        if (typeof editing.brandId === 'object' && editing.brandId !== null && editing.brandId.$oid) {
+          editingBrandId = editing.brandId.$oid
+        } else if (typeof editing.brandId === 'object' && editing.brandId !== null && editing.brandId._id) {
+          editingBrandId = editing.brandId._id
+        } else if (typeof editing.brandId === 'string') {
+          editingBrandId = editing.brandId
+        }
+      }
+
       setForm({
         name: editing.name || '',
         slug: editing.slug || '',
-        categoryId: editing.categoryId?._id || editing.categoryId || '',
-        subcategoryId: editing.subcategoryId?._id || editing.subcategoryId || '',
-        brandId: editing.brandId?._id || editing.brandId || '',
+        categoryId: editingCategoryId,
+        subcategoryId: editingSubcategoryId,
+        brandId: editingBrandId,
         isPublished: editing.isPublished !== undefined ? editing.isPublished : true,
         specs: editing.specs || {},
       })
@@ -140,118 +271,108 @@ export default function ProductModal({ open, onClose, onCreate, onUpdate, editin
           newPreviews.push(e.target?.result as string)
           // Khi đã load xong tất cả files
           if (newPreviews.length === fileArray.length) {
-            setImagePreviews(prev => ({ 
-              ...prev, 
-              images: editing ? [...prev.images, ...newPreviews] : newPreviews 
+            setImagePreviews(prev => ({
+              ...prev,
+              images: editing ? [...prev.images, ...newPreviews] : newPreviews
             }))
           }
         }
         reader.readAsDataURL(file)
       })
     } else {
-      setImagePreviews(prev => ({ 
-        ...prev, 
-        images: editing?.images || [] 
+      setImagePreviews(prev => ({
+        ...prev,
+        images: editing?.images || []
       }))
     }
   }
 
-const handleSubmit = async () => {
-  if (!form.name || !form.categoryId || !form.subcategoryId) {
-    toast.error('Vui lòng điền đủ tên, danh mục và danh mục con')
-    return
-  }
-
-  const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
-  const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/svg+xml'];
-
-  let totalSize = 0;
-
-  if (thumbnail) {
-    if (thumbnail.size > MAX_FILE_SIZE) {
-      toast.error(`File thumbnail quá lớn (${(thumbnail.size / 1024 / 1024).toFixed(2)}MB). Tối đa 20MB.`);
-      return;
+  const handleSubmit = async () => {
+    if (!form.name || !form.categoryId || !form.subcategoryId) {
+      toast.error('Vui lòng điền đủ tên, danh mục và danh mục con')
+      return
     }
-    if (!ALLOWED_TYPES.includes(thumbnail.type)) {
-      toast.error(`Định dạng file thumbnail không hợp lệ. Chấp nhận: PNG, JPEG, JPG, WebP, SVG`);
-      return;
-    }
-    totalSize += thumbnail.size;
-    console.log('Thumbnail:', thumbnail.name, thumbnail.type, `${(thumbnail.size / 1024 / 1024).toFixed(2)}MB`);
-  }
 
-  if (images && images.length > 0) {
-    for (const file of Array.from(images)) {
-      if (file.size > MAX_FILE_SIZE) {
-        toast.error(`File ${file.name} quá lớn (${(file.size / 1024 / 1024).toFixed(2)}MB). Tối đa 20MB.`);
+    const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+    const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/svg+xml'];
+
+    let totalSize = 0;
+
+    if (thumbnail) {
+      if (thumbnail.size > MAX_FILE_SIZE) {
+        toast.error(`File thumbnail quá lớn (${(thumbnail.size / 1024 / 1024).toFixed(2)}MB). Tối đa 20MB.`);
         return;
       }
-      if (!ALLOWED_TYPES.includes(file.type)) {
-        toast.error(`Định dạng file ${file.name} không hợp lệ. Chấp nhận: PNG, JPEG, JPG, WebP, SVG`);
+      if (!ALLOWED_TYPES.includes(thumbnail.type)) {
+        toast.error(`Định dạng file thumbnail không hợp lệ. Chấp nhận: PNG, JPEG, JPG, WebP, SVG`);
         return;
       }
-      totalSize += file.size;
-      console.log('Image:', file.name, file.type, `${(file.size / 1024 / 1024).toFixed(2)}MB`);
-    }
-  }
-
-  console.log('Tổng kích thước files:', `${(totalSize / 1024 / 1024).toFixed(2)}MB`);
-  console.log('Giới hạn cho phép: 20MB');
-
-  if (totalSize > MAX_FILE_SIZE) {
-    toast.error(`Tổng kích thước files quá lớn (${(totalSize / 1024 / 1024).toFixed(2)}MB). Tối đa 20MB.`);
-    return;
-  }
-
-  setLoading(true);
-  try {
-    const data = new FormData();
-    
-    data.append('name', form.name.trim());
-    data.append('slug', form.slug?.trim() || form.name.trim());
-    data.append('categoryId', form.categoryId);
-    data.append('subcategoryId', form.subcategoryId);
-    data.append('isPublished', String(form.isPublished));
-    data.append('priceFrom', '0');
-    data.append('priceTo', '0');
-    
-    if (form.brandId && form.brandId.trim() !== '') {
-      data.append('brandId', form.brandId);
+      totalSize += thumbnail.size;
     }
 
-    // Xử lý thumbnail
-    if (thumbnail instanceof File) {
-      console.log('Appending thumbnail:', thumbnail.name, `${(thumbnail.size / 1024 / 1024).toFixed(2)}MB`);
-      data.append('thumbnail', thumbnail);
-    }
-
-    // Xử lý images
-    if (images instanceof FileList && images.length > 0) {
-      Array.from(images).forEach((file, index) => {
-        if (thumbnail && file.name === thumbnail.name && file.size === thumbnail.size) {
-          console.log('Skipping duplicate file:', file.name);
+    if (images && images.length > 0) {
+      for (const file of Array.from(images)) {
+        if (file.size > MAX_FILE_SIZE) {
+          toast.error(`File ${file.name} quá lớn (${(file.size / 1024 / 1024).toFixed(2)}MB). Tối đa 20MB.`);
           return;
         }
-        console.log('Appending image:', file.name, `${(file.size / 1024 / 1024).toFixed(2)}MB`);
-        data.append('images', file);
-      });
+        if (!ALLOWED_TYPES.includes(file.type)) {
+          toast.error(`Định dạng file ${file.name} không hợp lệ. Chấp nhận: PNG, JPEG, JPG, WebP, SVG`);
+          return;
+        }
+        totalSize += file.size;
+      }
     }
 
-    console.log('=== GỬI REQUEST VỚI FILES ===');
-
-    if (editing) {
-      await onUpdate(editing._id, data);
-    } else {
-      await onCreate(data);
+    if (totalSize > MAX_FILE_SIZE) {
+      toast.error(`Tổng kích thước files quá lớn (${(totalSize / 1024 / 1024).toFixed(2)}MB). Tối đa 20MB.`);
+      return;
     }
 
-  } catch (error: any) {
-    console.error('Submit error details:', error);
-    toast.error(error.message || 'Có lỗi xảy ra khi gửi dữ liệu');
-  } finally {
-    setLoading(false);
-  }
-};
+    setLoading(true);
+    try {
+      const data = new FormData();
+      
+      data.append('name', form.name.trim());
+      data.append('slug', form.slug?.trim() || form.name.trim());
+      data.append('categoryId', form.categoryId);
+      data.append('subcategoryId', form.subcategoryId);
+      data.append('isPublished', String(form.isPublished));
+      data.append('priceFrom', '0');
+      data.append('priceTo', '0');
+      
+      if (form.brandId && form.brandId.trim() !== '') {
+        data.append('brandId', form.brandId);
+      }
+
+      // Xử lý thumbnail
+      if (thumbnail instanceof File) {
+        data.append('thumbnail', thumbnail);
+      }
+
+      // Xử lý images
+      if (images instanceof FileList && images.length > 0) {
+        Array.from(images).forEach((file, index) => {
+          if (thumbnail && file.name === thumbnail.name && file.size === thumbnail.size) {
+            return;
+          }
+          data.append('images', file);
+        });
+      }
+
+      if (editing) {
+        await onUpdate(editing._id, data);
+      } else {
+        await onCreate(data);
+      }
+
+    } catch (error: any) {
+      console.error('Submit error details:', error);
+      toast.error(error.message || 'Có lỗi xảy ra khi gửi dữ liệu');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const removeThumbnail = () => {
     setThumbnail(null)
@@ -299,8 +420,8 @@ const handleSubmit = async () => {
             <Dialog.Title className="text-lg font-semibold">
               {editing ? 'Cập nhật sản phẩm' : 'Thêm sản phẩm mới'}
             </Dialog.Title>
-            <button 
-              type="button" 
+            <button
+              type="button"
               onClick={onClose}
               className="p-1 hover:bg-gray-100 rounded"
             >
@@ -339,10 +460,10 @@ const handleSubmit = async () => {
                 <select
                   value={form.categoryId}
                   onChange={e => {
-                    setForm({ 
-                      ...form, 
+                    setForm({
+                      ...form,
                       categoryId: e.target.value,
-                      subcategoryId: '' 
+                      subcategoryId: ''
                     })
                   }}
                   className="w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -408,9 +529,9 @@ const handleSubmit = async () => {
                 <div className="mb-3">
                   <p className="text-xs text-gray-500 mb-2">Preview:</p>
                   <div className="relative inline-block">
-                    <img 
-                      src={imagePreviews.thumbnail} 
-                      alt="Thumbnail preview" 
+                    <img
+                      src={imagePreviews.thumbnail}
+                      alt="Thumbnail preview"
                       className="w-24 h-24 object-cover rounded border"
                     />
                     <button
@@ -453,9 +574,9 @@ const handleSubmit = async () => {
                   <div className="flex flex-wrap gap-2">
                     {imagePreviews.images.map((img, index) => (
                       <div key={index} className="relative group">
-                        <img 
-                          src={img} 
-                          alt={`Preview ${index + 1}`} 
+                        <img
+                          src={img}
+                          alt={`Preview ${index + 1}`}
                           className="w-16 h-16 object-cover rounded border"
                         />
                         <button

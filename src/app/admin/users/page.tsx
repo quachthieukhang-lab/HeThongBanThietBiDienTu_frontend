@@ -18,7 +18,7 @@ export default function UsersPage() {
 
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000';
 
-  // 🧩 Load danh sách người dùng
+  //Load danh sách người dùng
   const loadUsers = async () => {
     try {
       const res = await apiFetch(`${backendUrl}/users?search=${encodeURIComponent(search)}`, {
@@ -37,7 +37,7 @@ export default function UsersPage() {
     loadUsers();
   }, [search]);
 
-  // 🧩 Thêm người dùng mới
+  // Thêm người dùng mới
   const handleAdd = async (form: any) => {
   try {
     const token = localStorage.getItem('access_token');
@@ -50,12 +50,12 @@ export default function UsersPage() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`, // gửi accessToken
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
         name: form.name,
         email: form.email,
-        password: form.password, // cần ít nhất 6 ký tự
+        password: form.password,
         passwordHash,
         phone: form.phone,
         roles: [form.role],
@@ -77,7 +77,7 @@ export default function UsersPage() {
   }
 };
 
-  // 🧩 Xóa user
+  //Xóa user
   const handleDelete = async (id: string) => {
     try {
       const res = await apiFetch(`${backendUrl}/users/${id}`, { method: 'DELETE' });
@@ -92,7 +92,7 @@ export default function UsersPage() {
     }
   };
 
-  // 🧩 Khôi phục user
+  //Khôi phục user
   const handleRestore = async (id: string) => {
     try {
       const res = await apiFetch(`${backendUrl}/users/${id}/restore`, {
