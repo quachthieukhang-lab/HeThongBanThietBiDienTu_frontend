@@ -54,7 +54,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { label: 'Mẫu Thuộc Tính', href: '/admin/attribute-templates', icon: <Tag size={18} /> },
     { label: 'Sản Phẩm', href: '/admin/products', icon: <Package size={18} /> },
     { label: 'Biến Thể Sản Phẩm', href: '/admin/product-variants', icon: <Package size={18} /> },
-    { label: 'Gói Dịch Vụ Sản Phẩm', href: '/admin/packages', icon: <Package size={18} /> },
+    { label: 'Gói Dịch Vụ Sản Phẩm', href: '/admin/service-packages', icon: <Package size={18} /> },
     { label: 'Quản Lý Đơn Hàng', href: '/admin/orders', icon: <Tag size={18} /> },
     { label: 'Thương Hiệu', href: '/admin/brands', icon: <Star size={18} /> },
     { label: 'Đánh Giá', href: '/admin/reviews', icon: <Star size={18} /> },
