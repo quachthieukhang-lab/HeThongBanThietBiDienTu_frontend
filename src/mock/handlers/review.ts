@@ -1,5 +1,5 @@
 // mock/handlers/review.ts
-import type { ReviewLite, ReviewStatus, PaginatedReviews } from "@/types/review";
+import type { ReviewLite, ReviewStatus, PaginatedReviews } from "@/app/user/types/review";
 import { mockReviews } from "../data/review";
 
 // Giả lập BE trả về danh sách review theo productId

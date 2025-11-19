@@ -1,6 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
-import type { ProductLite, ProductVariant } from "@/types/product";
+import type { ProductLite, ProductVariant } from "@/app/user/types/product";
+import toast from "react-hot-toast";
+import { useCartStore } from "@/app/user/hooks/cartStore";
 
 export interface CartItem {
   productId: string;
@@ -9,13 +11,17 @@ export interface CartItem {
   price: number;
   quantity: number;
   thumbnail?: string;
+  facets?: any[];
 }
 
 export function useCart(userId?: string) {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [sessionId, setSessionId] = useState<string>("");
   const [isInitialized, setIsInitialized] = useState(false);
-
+  
+  // Lấy hàm từ store
+  const setCartCount = useCartStore(state => state.setCartCount);
+  
   const API_BASE = "http://localhost:3000";
 
   // Khởi tạo sessionId cho guest
@@ -39,7 +45,6 @@ export function useCart(userId?: string) {
 
     const loadCart = async () => {
       if (userId && sessionId) {
-        // Khi đăng nhập, merge guest cart vào user cart
         await mergeGuestToUser(userId);
       }
       await fetchCart();
@@ -56,8 +61,8 @@ export function useCart(userId?: string) {
       
       if (!res.ok) {
         if (res.status === 404) {
-          // Cart chưa tồn tại, tạo cart rỗng
           setCart([]);
+          setCartCount(0); // CẬP NHẬT STORE KHI CART RỖNG
           return;
         }
         const text = await res.text();
@@ -66,7 +71,12 @@ export function useCart(userId?: string) {
       }
 
       const data = await res.json();
+      console.log('Cart data from BE:', data);
       setCart(data.items || []);
+      
+      // CẬP NHẬT STORE VỚI SỐ LƯỢNG MỚI
+      const newCount = data.items?.reduce((sum: number, item: CartItem) => sum + item.quantity, 0) || 0;
+      setCartCount(newCount);
     } catch (error) {
       console.error("Error fetching cart:", error);
     }
@@ -83,14 +93,15 @@ export function useCart(userId?: string) {
         quantity,
       };
 
-      // Chỉ thêm userId hoặc sessionId, không thêm cả hai
       if (userId) {
         payload.userId = userId;
       } else {
         payload.sessionId = sessionId;
       }
 
-      if (variant) payload.variantId = variant._id;
+      if (variant) {
+        payload.variantId = variant._id;
+      }
 
       const res = await fetch(`${API_BASE}/carts/items`, {
         method: "POST",
@@ -101,17 +112,24 @@ export function useCart(userId?: string) {
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
+      
+      toast.success('Đã thêm sản phẩm vào giỏ hàng!', {
+        duration: 3000,
+      });
 
-      const data = await res.json();
-      setCart(data.items || []);
+      await fetchCart();
+      
     } catch (error) {
       console.error("Error adding to cart:", error);
+      toast.error('Thêm sản phẩm vào giỏ hàng thất bại.', {
+        duration: 3000,
+      });
     }
   };
 
   const buyNow = async (product: ProductLite, variant?: ProductVariant) => {
     await addToCart(product, variant);
-    window.location.href = "/cart";
+    window.location.href = "/user/cart";
   };
 
   const setItemQty = async (productId: string, variantId: string | undefined, quantity: number) => {
@@ -137,9 +155,8 @@ export function useCart(userId?: string) {
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
-
-      const data = await res.json();
-      setCart(data.items || []);
+      await fetchCart();
+      
     } catch (error) {
       console.error("Error setting quantity:", error);
     }
@@ -168,8 +185,8 @@ export function useCart(userId?: string) {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
 
-      const data = await res.json();
-      setCart(data.items || []);
+      await fetchCart();
+      
     } catch (error) {
       console.error("Error removing item:", error);
     }
@@ -185,7 +202,6 @@ export function useCart(userId?: string) {
         body: JSON.stringify({ sessionId, userId }),
       });
       
-      // Clear session sau khi merge
       sessionStorage.removeItem("cartSessionId");
       setSessionId("");
     } catch (error) {
@@ -193,6 +209,7 @@ export function useCart(userId?: string) {
     }
   };
 
+  
   return { 
     cart, 
     sessionId, 

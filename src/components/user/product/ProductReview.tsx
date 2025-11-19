@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState, useMemo } from "react";
-import type { ReviewLite } from "@/types/review";
+import type { ReviewLite } from "@/app/user/types/review";
 
 interface Props {
   reviews: ReviewLite[];

@@ -1,4 +1,4 @@
-import type { ProductLite } from "@/types/product";
+import type { ProductLite } from "@/app/user/types/product";
 import { mockProducts } from "../data/product";
 
 // Giả lập API lấy danh sách products
@@ -16,7 +16,7 @@ export async function mockGetProductsBySubcategoryId(
   return mockProducts.filter((p) => p.subcategoryId === subcategoryId);
 }
 
-import type { ProductVariant } from "@/types/product";
+import type { ProductVariant } from "@/app/user/types/product";
 import { mockProductVariants } from "../data/product";
 // Giả lập API lấy danh sách product variants theo productId
 export async function mockGetProductVariants(

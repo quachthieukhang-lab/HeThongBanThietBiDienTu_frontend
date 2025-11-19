@@ -3,9 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import SWRProvider from "@/providers/SWRProvider";
 import { Theme } from "@radix-ui/themes";
-import { config } from '@fortawesome/fontawesome-svg-core'
-import '@fortawesome/fontawesome-svg-core/styles.css'
-config.autoAddCss = false
+import { Toaster } from "react-hot-toast"; // Thêm import này
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,17 +27,50 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <link 
+          rel="stylesheet" 
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" 
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Theme
-          accentColor="orange" // Change the primary color
+          accentColor="orange"
           grayColor="mauve"
           radius="large"
           scale="medium"
         >
           <SWRProvider>
             {children}
+            {/* Thêm Toaster component ở đây */}
+            <Toaster 
+              position="bottom-right"
+              toastOptions={{
+                duration: 3000,
+                style: {
+                  background: '#363636',
+                  color: '#fff',
+                  fontSize: '14px',
+                  minWidth: '200px',
+                },
+                success: {
+                  duration: 3000,
+                  iconTheme: {
+                    primary: '#10b981',
+                    secondary: '#fff',
+                  },
+                },
+                error: {
+                  duration: 4000,
+                  iconTheme: {
+                    primary: '#ef4444',
+                    secondary: '#fff',
+                  },
+                },
+              }}
+            />
           </SWRProvider>
         </Theme>
       </body>

@@ -1,4 +1,4 @@
-import {BrandLite } from "@/types/brand";
+import {BrandLite } from "@/app/user/types/brand";
 import { mockBrands } from "../data/brand";
 // Giả lập API lấy danh sách brands
 export async function mockGetBrands(): Promise<BrandLite[]> {

@@ -54,6 +54,7 @@ export default function LoginPage() {
   const [selectedRole, setSelectedRole] = useState<LoginRole>('user');
   const [loading, setLoading] = useState(false);
 
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -80,9 +81,18 @@ export default function LoginPage() {
       localStorage.setItem("refreshToken", data.refreshToken);
       localStorage.setItem("userRole", selectedRole);
 
-      if (data.user) {
-        localStorage.setItem("userInfo", JSON.stringify(data.user));
-      }
+      // Gọi API /me để lấy thông tin user (chỉ có email)
+    const userRes = await fetch('http://localhost:3000/auth/me', {
+      headers: { 
+        "Authorization": `Bearer ${data.accessToken}`,
+        "Content-Type": "application/json"
+      },
+    });
+
+    if (userRes.ok) {
+      const userInfo = await userRes.json();
+      localStorage.setItem("userInfo", JSON.stringify(userInfo));
+    }
 
       toast.success(`Đăng nhập thành công với vai trò ${selectedRole === 'admin' ? 'Quản trị viên' : 'Người dùng'}!`);
 
@@ -91,6 +101,7 @@ export default function LoginPage() {
       } else {
         router.push("/");
       }
+      router.refresh();
     } catch (err: any) {
       setError(err.message || "Sai email hoặc mật khẩu");
       toast.error('Đăng nhập thất bại!');

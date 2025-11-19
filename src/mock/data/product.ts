@@ -1,4 +1,4 @@
-import type { ProductLite } from "@/types/product";
+import type { ProductLite } from "@/app/user/types/product";
 
 export const mockProducts: ProductLite[] = [
   {
@@ -64,7 +64,7 @@ export const mockProducts: ProductLite[] = [
   },
 ];
 
-import type { ProductVariant } from "@/types/product";
+import type { ProductVariant } from "@/app/user/types/product";
 
 export const mockProductVariants: ProductVariant[] = [
   // --- Smart Tivi Samsung ---

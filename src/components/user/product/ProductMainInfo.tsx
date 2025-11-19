@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import type { ProductLite, ProductVariant } from "@/types/product";
-import { useCart } from "@/hooks/useCart";
+import type { ProductLite, ProductVariant } from "@/app/user/types/product";
+import { useCart } from "@/app/user/hooks/useCart";
 import {
   StarIcon,
   HeartIcon,

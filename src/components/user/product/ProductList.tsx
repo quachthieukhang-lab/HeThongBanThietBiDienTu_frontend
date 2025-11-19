@@ -4,8 +4,8 @@ import { useState } from "react";
 import useSWR from "swr";
 import { apiClient } from "@/lib/apiClient";
 import { mockApi } from "@/mock";
-import type { ProductLite } from "@/types/product";
-import type { PaginatedResponse } from "@/types/api";
+import type { ProductLite } from "@/app/user/types/product";
+import type { PaginatedResponse } from "@/app/user/types/api";
 import ProductCard from "./ProductCard";
 import Pagination from "./Pagination";
 

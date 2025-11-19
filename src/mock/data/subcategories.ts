@@ -1,4 +1,4 @@
-import type { SubcategoryBonus, SubcategoryWithImage } from "@/types/category";
+import type { SubcategoryBonus, SubcategoryWithImage } from "@/app/user/types/category";
 
 export const mockSubcategories: SubcategoryBonus[] = [
   // --- Category 1: Điện tử - Điện máy ---

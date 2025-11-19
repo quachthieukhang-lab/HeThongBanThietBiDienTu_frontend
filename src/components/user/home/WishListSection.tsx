@@ -1,5 +1,5 @@
 "use client";
-import { useWishlist } from "@/hooks/useWishList";
+import { useWishlist } from "@/app/user/hooks/useWishList";
 import ProductCard from "@/components/user/product/ProductCard";
 
 export default function WishlistSection() {

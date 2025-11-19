@@ -1,5 +1,5 @@
 import { mockSubcategories } from "../data/subcategories";
-import type { SubcategoryBonus, SubcategoryLite } from "@/types/category";
+import type { SubcategoryBonus, SubcategoryLite } from "@/app/user/types/category";
 
 /** 
  * Giả lập cho endpoint:

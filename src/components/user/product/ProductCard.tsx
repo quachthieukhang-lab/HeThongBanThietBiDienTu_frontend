@@ -2,8 +2,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Heart } from "lucide-react";
-import { useWishlist } from "@/hooks/useWishList";
-import type { ProductLite } from "@/types/product";
+import { useWishlist } from "@/app/user/hooks/useWishList";
+import type { ProductLite } from "@/app/user/types/product";
 
 export default function ProductCard({ product }: { product: ProductLite }) {
   const { name, slug, thumbnail, priceFrom, priceTo, _id } = product;
@@ -34,7 +34,7 @@ export default function ProductCard({ product }: { product: ProductLite }) {
 
       {/* Product Image */}
       <Link 
-        href={`/product/${slug}`} 
+        href={`/user/product/${slug}`} 
         className="relative aspect-square mb-3 bg-gray-100 overflow-hidden"
       >
         {thumbnail && (
@@ -50,7 +50,7 @@ export default function ProductCard({ product }: { product: ProductLite }) {
 
       {/* Product Info */}
       <div className="p-3 flex flex-col flex-1">
-        <Link href={`/product/${slug}`} className="flex flex-col flex-1">
+        <Link href={`/user/product/${slug}`} className="flex flex-col flex-1">
           <h3 className="text-sm font-medium text-gray-900 line-clamp-2 mb-2 hover:text-blue-600 transition-colors">
             {name}
           </h3>

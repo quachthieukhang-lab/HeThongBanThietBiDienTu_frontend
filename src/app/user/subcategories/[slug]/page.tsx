@@ -4,12 +4,11 @@ import { useParams } from "next/navigation";
 import useSWR from "swr";
 import { apiClient } from "@/lib/apiClient";
 import ProductList from "@/components/user/product/ProductList";
-import type { ProductLite } from "@/types/product";
-import type { SubcategoryBonus } from "@/types/category";
-import { useSlugToIdMap } from "@/hooks/useSlugtoIdMap";
-import type { PaginatedResponse } from "@/types/api";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { IconProp } from '@fortawesome/fontawesome-svg-core';
+import type { ProductLite } from "@/app/user/types/product";
+import type { SubcategoryBonus } from "@/app/user/types/category";
+import { useSlugToIdMap } from "@/app/user/hooks/useSlugtoIdMap";
+import type { PaginatedResponse } from "@/app/user/types/api";
+import FAIcon from "@/components/user/home/FAIcon";
 
 export default function SubcategoryPage() {
   const { slug } = useParams();
@@ -63,10 +62,11 @@ export default function SubcategoryPage() {
         {/* Icon FontAwesome - Đã fix hiển thị icon */}
         {subcategory.icon && (
           <div className="w-20 h-20 mb-4 flex items-center justify-center bg-white/30 backdrop-blur-sm rounded-full shadow-lg border border-white/20">
-            <FontAwesomeIcon 
-              icon={subcategory.icon as IconProp} 
-              className="text-white text-3xl" 
-            />
+            {subcategory.icon ? (
+    <FAIcon icon={subcategory.icon} className="w-8 h-8 text-slate-700 group-hover:text-slate-900" />
+  ) : (
+    <div className="w-8 h-8 rounded bg-slate-200" />
+  )}
           </div>
         )}
 

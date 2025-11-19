@@ -1,4 +1,4 @@
-import type { Review } from "@/types/review";
+import type { Review } from "@/app/user/types/review";
 
 export const mockReviews: Review[] = [
    {
