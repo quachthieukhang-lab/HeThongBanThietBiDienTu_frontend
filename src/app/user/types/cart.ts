@@ -9,6 +9,8 @@ export type CartItem = {
   quantity: number;
   image?: string;
   meta?: Record<string, any>;
+  variantSku?: string;   
+  variantName?: string;   
 };
 
 export type Cart = {

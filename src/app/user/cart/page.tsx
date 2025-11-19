@@ -1,13 +1,16 @@
+/* eslint-disable @next/next/no-html-link-for-pages */
 "use client";
 import { useCart, CartItem } from "@/app/user/hooks/useCart";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import * as AlertDialog from "@radix-ui/react-alert-dialog";
+import { Trash2, Plus, Minus, ShoppingBag } from "lucide-react";
 
 export default function CartPage({ userId }: { userId?: string }) {
   const { cart, fetchCart, setItemQty, removeItem, mergeGuestToUser, sessionId } = useCart(userId);
   const [loading, setLoading] = useState(true);
-const API_BASE = "http://localhost:3000";
+  const API_BASE = "http://localhost:3000";
+
   useEffect(() => {
     const init = async () => {
       if (!userId && !sessionId) return;
@@ -27,11 +30,10 @@ const API_BASE = "http://localhost:3000";
     } else {
       await setItemQty(item.productId, item.variantId, newQty);
     }
-    await fetchCart();
   };
 
   if (loading) return (
-    <div className="max-w-4xl mx-auto py-12 flex justify-center">
+    <div className="max-w-6xl mx-auto py-12 flex justify-center">
       <div className="text-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
         <p className="text-gray-600">Đang tải giỏ hàng...</p>
@@ -40,126 +42,210 @@ const API_BASE = "http://localhost:3000";
   );
 
   if (cart.length === 0) return (
-    <div className="max-w-4xl mx-auto py-12 text-center">
-      <div className="text-6xl mb-4">🛒</div>
+    <div className="max-w-6xl mx-auto py-16 text-center">
+      <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+        <ShoppingBag className="w-12 h-12 text-gray-400" />
+      </div>
       <h2 className="text-2xl font-bold text-gray-900 mb-2">Giỏ hàng trống</h2>
-      <p className="text-gray-600 mb-6">Hãy thêm sản phẩm vào giỏ hàng của bạn</p>
+      <p className="text-gray-600 mb-8">Hãy thêm sản phẩm vào giỏ hàng của bạn</p>
+      
       <a 
-        href="/products" 
-        className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+        href="/" 
+        className="inline-flex items-center gap-2 bg-blue-600 text-white px-8 py-4 rounded-lg hover:bg-blue-700 transition-colors font-medium"
       >
+        <ShoppingBag className="w-5 h-5" />
         Tiếp tục mua sắm
       </a>
     </div>
   );
 
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Giỏ hàng của bạn</h1>
+    <div className="max-w-6xl mx-auto py-8 px-4">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Giỏ hàng của bạn</h1>
+        <p className="text-gray-600">
+          Bạn đang có <span className="font-semibold text-blue-600">{itemCount}</span> sản phẩm trong giỏ hàng
+        </p>
+      </div>
       
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        {cart.map((item) => (
-          <div
-            key={item.productId + item.variantId}
-            className="flex items-center gap-4 p-6 border-b border-gray-100 last:border-0"
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Cart Items */}
+        <div className="lg:col-span-2">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            {cart.map((item) => (
+              <div
+                key={item.productId + (item.variantId || '')}
+                className="flex items-center gap-6 p-6 border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors"
+              >
+                {/* Product Image */}
+                <div className="flex-shrink-0">
+                  <Image
+                    src={item.thumbnail ? `${API_BASE}/${item.thumbnail}` : "/placeholder.png"}
+                    alt={item.name}
+                    width={100}
+                    height={100}
+                    className="w-24 h-24 object-cover rounded-lg border border-gray-200"
+                  />
+                </div>
+
+               {/* Product Info */}
+<div className="flex-1 min-w-0">
+  <h3 className="font-semibold text-gray-900 text-lg mb-1">{item.name}</h3>
+  
+ {/* Hiển thị chỉ giá trị facets */}
+{item.facets && typeof item.facets === 'object' && Object.keys(item.facets).length > 0 && (
+  <div className="mb-3">
+    <h4 className="text-sm font-semibold text-gray-900 mb-2">Phiên bản:</h4>
+    <div className="flex flex-wrap gap-2">
+      {Object.values(item.facets).map((value, index) => {
+        let displayValue = value;
+        
+        // Xử lý giá trị boolean
+        if (typeof value === 'boolean') {
+          displayValue = value ? 'Có bơm' : 'Không bơm';
+        }
+        
+        if (!displayValue) return null;
+        
+        return (
+          <span 
+            key={index}
+            className="px-3 py-2 border-2 border-blue-200 bg-blue-50 text-blue-700 rounded-lg text-xs font-small"
           >
-            {/* Product Image */}
-            <div className="flex-shrink-0">
-              <Image
-                src={item.thumbnail ? `${API_BASE}/${item.thumbnail}` : "/placeholder.png"}
-                alt={item.name}
-                width={80}
-                height={80}
-                className="w-20 h-20 object-cover rounded-lg"
-              />
-            </div>
+            {displayValue}
+          </span>
+        );
+      })}
+    </div>
+  </div>
+)}
 
-            {/* Product Info */}
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-gray-900 truncate">{item.name}</h3>
-              {item.variantId && (
-                <p className="text-sm text-gray-500 mt-1">Phiên bản: {item.variantId}</p>
-              )}
-              <p className="text-lg font-semibold text-blue-600 mt-2">
-                {item.price.toLocaleString("vi-VN")}₫
-              </p>
-            </div>
+  <p className="text-xl font-bold text-blue-600">
+    {item.price.toLocaleString("vi-VN")}₫
+  </p>
+</div>
 
-            {/* Quantity Controls */}
-            <div className="flex items-center gap-3">
-              <div className="flex items-center border border-gray-300 rounded-lg">
-                <button
-                  onClick={() => handleQtyChange(item, -1)}
-                  className="px-3 py-2 hover:bg-gray-50 transition-colors text-gray-600"
-                >
-                  -
-                </button>
-                <span className="px-4 py-2 min-w-12 text-center font-medium">
-                  {item.quantity}
-                </span>
-                <button
-                  onClick={() => handleQtyChange(item, 1)}
-                  className="px-3 py-2 hover:bg-gray-50 transition-colors text-gray-600"
-                >
-                  +
-                </button>
+                {/* Quantity Controls */}
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center border border-gray-300 rounded-lg bg-white">
+                    <button
+                      onClick={() => handleQtyChange(item, -1)}
+                      className="px-4 py-2 hover:bg-gray-100 transition-colors text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={item.quantity <= 1}
+                    >
+                      <Minus className="w-4 h-4" />
+                    </button>
+                    <span className="px-4 py-2 min-w-12 text-center font-medium text-gray-900 border-x border-gray-300">
+                      {item.quantity}
+                    </span>
+                    <button
+                      onClick={() => handleQtyChange(item, 1)}
+                      className="px-4 py-2 hover:bg-gray-100 transition-colors text-gray-600"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Remove Button */}
+                  <AlertDialog.Root>
+                    <AlertDialog.Trigger asChild>
+                      <button className="text-gray-400 hover:text-red-600 p-2 transition-colors hover:bg-red-50 rounded-lg">
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    </AlertDialog.Trigger>
+                    <AlertDialog.Portal>
+                      <AlertDialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
+                      <AlertDialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl p-6 max-w-sm w-full shadow-2xl border border-gray-200">
+                        <AlertDialog.Title className="text-lg font-semibold mb-2 text-gray-900">
+                          Xác nhận xóa
+                        </AlertDialog.Title>
+                        <AlertDialog.Description className="text-gray-600 mb-6">
+                          Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng?
+                        </AlertDialog.Description>
+                        <div className="flex gap-3 justify-end">
+                          <AlertDialog.Cancel asChild>
+                            <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-700 font-medium">
+                              Hủy
+                            </button>
+                          </AlertDialog.Cancel>
+                          <AlertDialog.Action asChild>
+                            <button 
+                              onClick={() => removeItem(item.productId, item.variantId).then(fetchCart)}
+                              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium"
+                            >
+                              Xóa
+                            </button>
+                          </AlertDialog.Action>
+                        </div>
+                      </AlertDialog.Content>
+                    </AlertDialog.Portal>
+                  </AlertDialog.Root>
+                </div>
               </div>
+            ))}
+          </div>
+        </div>
 
-              {/* Remove Button with Alert Dialog */}
-              <AlertDialog.Root>
-                <AlertDialog.Trigger asChild>
-                  <button className="text-red-600 hover:text-red-700 p-2 transition-colors">
-                    🗑️
-                  </button>
-                </AlertDialog.Trigger>
-                <AlertDialog.Portal>
-                  <AlertDialog.Overlay className="fixed inset-0 bg-black/50" />
-                  <AlertDialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg p-6 max-w-sm w-full">
-                    <AlertDialog.Title className="text-lg font-semibold mb-2">
-                      Xác nhận xóa
-                    </AlertDialog.Title>
-                    <AlertDialog.Description className="text-gray-600 mb-4">
-                      Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng?
-                    </AlertDialog.Description>
-                    <div className="flex gap-3 justify-end">
-                      <AlertDialog.Cancel asChild>
-                        <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                          Hủy
-                        </button>
-                      </AlertDialog.Cancel>
-                      <AlertDialog.Action asChild>
-                        <button 
-                          onClick={() => removeItem(item.productId, item.variantId).then(fetchCart)}
-                          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-                        >
-                          Xóa
-                        </button>
-                      </AlertDialog.Action>
-                    </div>
-                  </AlertDialog.Content>
-                </AlertDialog.Portal>
-              </AlertDialog.Root>
+        {/* Order Summary */}
+        <div className="lg:col-span-1">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sticky top-8">
+            <h2 className="text-xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-200">
+              Tóm tắt đơn hàng
+            </h2>
+            
+            <div className="space-y-4 mb-6">
+              <div className="flex justify-between text-gray-600">
+                <span>Tạm tính ({itemCount} sản phẩm):</span>
+                <span>{total.toLocaleString("vi-VN")}₫</span>
+              </div>
+              <div className="flex justify-between text-gray-600">
+                <span>Phí vận chuyển:</span>
+                <span className="text-green-600">Miễn phí</span>
+              </div>
+              <div className="flex justify-between text-lg font-semibold text-gray-900 pt-4 border-t border-gray-200">
+                <span>Tổng cộng:</span>
+                <span className="text-2xl text-blue-600">{total.toLocaleString("vi-VN")}₫</span>
+              </div>
+            </div>
+
+            <a 
+              href="/checkout" 
+              className="w-full bg-blue-600 text-white py-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors text-center block mb-4"
+            >
+              Tiến hành thanh toán
+            </a>
+            
+            <a 
+              href="/" 
+              className="w-full border border-gray-300 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-50 transition-colors text-center block"
+            >
+              Tiếp tục mua sắm
+            </a>
+
+            {/* Benefits */}
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <h3 className="font-semibold text-gray-900 mb-3">Ưu đãi đặc biệt:</h3>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  Miễn phí vận chuyển toàn quốc
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  Đổi trả trong 30 ngày
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  Bảo hành chính hãng
+                </li>
+              </ul>
             </div>
           </div>
-        ))}
-      </div>
-
-      {/* Total and Checkout */}
-      <div className="mt-8 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <div className="flex justify-between items-center mb-6">
-          <span className="text-xl font-semibold text-gray-900">Tổng cộng:</span>
-          <span className="text-2xl font-bold text-blue-600">
-            {total.toLocaleString("vi-VN")}₫
-          </span>
         </div>
-        <a 
-          href="/checkout" 
-          className="w-full bg-blue-600 text-white py-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors text-center block"
-        >
-          Tiến hành thanh toán
-        </a>
       </div>
     </div>
   );
