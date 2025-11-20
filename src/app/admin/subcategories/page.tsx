@@ -33,8 +33,6 @@ export default function SubcategoriesPage() {
     }
   }
 
-
-
   const loadSubcategories = async (p = page, s = search, c = selectedCategory) => {
     try {
       setLoading(true)

@@ -34,8 +34,15 @@ export default function AttributeTemplateTable({
               </tr>
             ) : (
               items.map((t: any) => (
+                console.log(t),
                 <tr key={t._id} className="hover:bg-indigo-50 transition">
-                  <td className="px-4 py-3 font-medium">{t.name ?? (t.subcategoryId?.name ?? '—')}</td>
+                  <td className="px-4 py-3 font-medium">
+                    {(Array.isArray(t.attributes) &&
+                      t.attributes.find((a: any) => a.key === 'att_template_name')?.label) ||
+                      t.subcategoryId?.name ||
+                      '—'
+                    }
+                  </td>
                   <td className="px-4 py-3 text-gray-600">
                     {typeof t.subcategoryId === 'object' ? t.subcategoryId?.name ?? '—' : '—'}
                   </td>
