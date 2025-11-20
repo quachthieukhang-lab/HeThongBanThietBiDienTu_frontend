@@ -9,36 +9,40 @@ import type { PaginatedResponse } from "@/app/user/types/api";
 import ProductCard from "./ProductCard";
 import Pagination from "./Pagination";
 
-export default function ProductList({ subcategoryId }: { subcategoryId?: string }) {
+
+interface ProductListProps {
+  subcategoryId?: string;
+  brandId?: string;
+}
+
+export default function ProductList({ subcategoryId, brandId }: ProductListProps) {
   // --- 1️⃣ State quản lý phân trang ---
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 18;
 
   // --- 2️⃣ Hàm fetch dữ liệu ---
   const fetchProducts = async (): Promise<PaginatedResponse<ProductLite>> => {
-  const url = subcategoryId
-    ? `/products?subcategoryId=${subcategoryId}&page=${currentPage}&limit=${pageSize}`
-    : `/products?page=${currentPage}&limit=${pageSize}`;
+    let url = `/products?page=${currentPage}&limit=${pageSize}`;
+    if (subcategoryId) url += `&subcategoryId=${subcategoryId}`;
+    if (brandId) url += `&brandId=${brandId}`;
 
-  const res = await apiClient<PaginatedResponse<ProductLite>>(url);
+    const res = await apiClient<PaginatedResponse<ProductLite>>(url);
     return res;
-};
-
+  };
 
   // --- 3️⃣ Gọi API với SWR ---
-  const { data, error, isLoading } = useSWR(
-    [subcategoryId, currentPage], // key phụ thuộc trang và sub
-    fetchProducts
-  );
+  const { data, error, isLoading } = useSWR([subcategoryId, brandId, currentPage], fetchProducts);
 
   const products = data?.items ?? [];
   const total = data?.total ?? 0;
 
+
   // --- 4️⃣ Xử lý trạng thái ---
-  if (error)
-    return <p className="text-red-500 text-center mt-4">Không thể tải sản phẩm.</p>;
-  if (isLoading)
-    return <p className="text-gray-500 text-center mt-4">Đang tải dữ liệu sản phẩm...</p>;
+  if (error) return <p className="text-red-500 text-center mt-4">Không thể tải sản phẩm.</p>;
+  if (isLoading) return <p className="text-gray-500 text-center mt-4">Đang tải dữ liệu sản phẩm...</p>;
+
+  if (products.length === 0)
+    return <p className="text-center text-gray-500 py-8">Chưa có sản phẩm nào.</p>;
 
   // --- 5️⃣ Giao diện ---
   return (
