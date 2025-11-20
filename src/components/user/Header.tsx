@@ -163,7 +163,7 @@ export function Header() {
           {/* User & Cart & Address - Sắp xếp gọn gàng */}
           <div className="flex items-center gap-2 flex-shrink-0">
             {/* Address Selector */}
-            <div className="min-w-[200px]">
+            <div className="min-w-[200px] text-white/80">
               <AddressList />
             </div>
 

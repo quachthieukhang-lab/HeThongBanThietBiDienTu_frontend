@@ -4,7 +4,6 @@
 import { useState } from "react";
 import { apiClient } from "@/lib/apiClient";
 import { useRouter } from "next/navigation";
-import type { AuthResponse } from "@/types/auth";
 import * as Form from "@radix-ui/react-form";
 import Link from "next/link";
 import toast from "react-hot-toast";

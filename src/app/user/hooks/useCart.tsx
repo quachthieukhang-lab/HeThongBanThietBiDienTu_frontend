@@ -1,5 +1,6 @@
 "use client";
-import { useState, useEffect } from "react";
+
+import { useState, useEffect, useCallback } from "react";
 import type { ProductLite, ProductVariant } from "@/app/user/types/product";
 import toast from "react-hot-toast";
 import { useCartStore } from "@/app/user/hooks/cartStore";
@@ -14,210 +15,191 @@ export interface CartItem {
   facets?: any[];
 }
 
-export function useCart(userId?: string) {
+export function useCart() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [sessionId, setSessionId] = useState<string>("");
-  const [isInitialized, setIsInitialized] = useState(false);
-  
-  // Lấy hàm từ store
-  const setCartCount = useCartStore(state => state.setCartCount);
-  
+
   const API_BASE = "http://localhost:3000";
 
-  // Khởi tạo sessionId cho guest
-  useEffect(() => {
-    const initializeSession = () => {
-      let sid = sessionStorage.getItem("cartSessionId");
-      if (!sid) {
-        sid = crypto.randomUUID();
-        sessionStorage.setItem("cartSessionId", sid);
-      }
-      setSessionId(sid);
-      setIsInitialized(true);
-    };
+  // Zustand store
+  const setCartCount = useCartStore((state) => state.setCartCount);
 
-    initializeSession();
+  // --------------------------
+  // 1) TẠO SESSION CHO GUEST
+  // --------------------------
+  useEffect(() => {
+    let sid = sessionStorage.getItem("cartSessionId");
+
+    if (!sid) {
+      sid = crypto.randomUUID();
+      sessionStorage.setItem("cartSessionId", sid);
+    }
+
+    setSessionId(sid);
   }, []);
 
-  // Fetch cart sau khi đã có sessionId hoặc userId
-  useEffect(() => {
-    if (!isInitialized) return;
+  // --------------------------
+  // Helper: Cập nhật store và state
+  // --------------------------
+  const syncCartState = useCallback((data: any) => {
+    const items = data?.items || [];
+    setCart(items);
 
-    const loadCart = async () => {
-      if (userId && sessionId) {
-        await mergeGuestToUser(userId);
-      }
-      await fetchCart();
-    };
+    // update count
+    const count = items.reduce((sum: number, it: CartItem) => sum + it.quantity, 0);
+    setCartCount(count);
+  }, [setCartCount]);
 
-    loadCart();
-  }, [userId, isInitialized]);
+  // --------------------------
+  // 2) FETCH CART
+  // --------------------------
+  const fetchCart = useCallback(async () => {
+    if (!sessionId) return;
 
-  const fetchCart = async () => {
     try {
-      const query = userId ? `userId=${userId}` : `sessionId=${sessionId}`;
+      const token = localStorage.getItem("accessToken");
 
-      const res = await fetch(`${API_BASE}/carts/me?${query}`);
-      
+      const res = await fetch(`${API_BASE}/carts/me?sessionId=${sessionId}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+
       if (!res.ok) {
-        if (res.status === 404) {
-          setCart([]);
-          setCartCount(0); // CẬP NHẬT STORE KHI CART RỖNG
-          return;
-        }
-        const text = await res.text();
-        console.error("Fetch cart failed:", text);
+        console.error("Fetch cart failed:", await res.text());
         return;
       }
 
       const data = await res.json();
-      console.log('Cart data from BE:', data);
-      setCart(data.items || []);
-      
-      // CẬP NHẬT STORE VỚI SỐ LƯỢNG MỚI
-      const newCount = data.items?.reduce((sum: number, item: CartItem) => sum + item.quantity, 0) || 0;
-      setCartCount(newCount);
-    } catch (error) {
-      console.error("Error fetching cart:", error);
-    }
-  };
+      syncCartState(data);
 
-  const addToCart = async (
-    product: ProductLite,
-    variant?: ProductVariant,
-    quantity = 1
-  ) => {
+    } catch (err) {
+      console.error("FetchCart error:", err);
+    }
+  }, [sessionId, syncCartState]);
+
+  // Fetch cart khi sessionId có giá trị
+  useEffect(() => {
+    if (sessionId) fetchCart();
+  }, [sessionId, fetchCart]);
+
+  // --------------------------
+  // 3) ADD TO CART
+  // --------------------------
+  const addToCart = async (product: ProductLite, variant?: ProductVariant, quantity = 1) => {
     try {
+      const token = localStorage.getItem("accessToken");
+
       const payload: any = {
         productId: product._id,
         quantity,
+        sessionId, // luôn gửi sessionId
       };
 
-      if (userId) {
-        payload.userId = userId;
-      } else {
-        payload.sessionId = sessionId;
-      }
-
-      if (variant) {
-        payload.variantId = variant._id;
-      }
+      if (variant) payload.variantId = variant._id;
 
       const res = await fetch(`${API_BASE}/carts/items`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
+        console.error("AddToCart failed:", await res.text());
+        toast.error("Không thể thêm vào giỏ hàng!");
+        return;
       }
-      
-      toast.success('Đã thêm sản phẩm vào giỏ hàng!', {
-        duration: 3000,
-      });
 
+      toast.success("Đã thêm vào giỏ hàng!");
       await fetchCart();
-      
-    } catch (error) {
-      console.error("Error adding to cart:", error);
-      toast.error('Thêm sản phẩm vào giỏ hàng thất bại.', {
-        duration: 3000,
-      });
+
+    } catch (err) {
+      console.error("addToCart error:", err);
+      toast.error("Lỗi khi thêm vào giỏ");
     }
   };
 
+  // --------------------------
+  // 4) BUY NOW
+  // --------------------------
   const buyNow = async (product: ProductLite, variant?: ProductVariant) => {
     await addToCart(product, variant);
     window.location.href = "/user/cart";
   };
 
+  // --------------------------
+  // 5) SET QTY
+  // --------------------------
   const setItemQty = async (productId: string, variantId: string | undefined, quantity: number) => {
     try {
-      const payload: any = { 
-        productId, 
-        variantId, 
-        quantity 
-      };
-
-      if (userId) {
-        payload.userId = userId;
-      } else {
-        payload.sessionId = sessionId;
-      }
+      const token = localStorage.getItem("accessToken");
 
       const res = await fetch(`${API_BASE}/carts/items`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          productId,
+          variantId,
+          quantity,
+          sessionId,
+        }),
       });
 
       if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
+        console.error("setItemQty failed:", await res.text());
+        return;
       }
+
       await fetchCart();
-      
-    } catch (error) {
-      console.error("Error setting quantity:", error);
+
+    } catch (err) {
+      console.error("setItemQty error:", err);
     }
   };
 
-  const removeItem = async (productId: string, variantId: string | undefined) => {
+  // --------------------------
+  // 6) REMOVE ITEM
+  // --------------------------
+  const removeItem = async (productId: string, variantId?: string) => {
     try {
-      const payload: any = { 
-        productId, 
-        variantId 
-      };
-
-      if (userId) {
-        payload.userId = userId;
-      } else {
-        payload.sessionId = sessionId;
-      }
+      const token = localStorage.getItem("accessToken");
 
       const res = await fetch(`${API_BASE}/carts/items`, {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          productId,
+          variantId,
+          sessionId,
+        }),
       });
 
       if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
+        console.error("removeItem failed:", await res.text());
+        return;
       }
 
       await fetchCart();
-      
-    } catch (error) {
-      console.error("Error removing item:", error);
+
+    } catch (err) {
+      console.error("removeItem error:", err);
     }
   };
 
-  const mergeGuestToUser = async (userId: string) => {
-    if (!sessionId) return;
-    
-    try {
-      await fetch(`${API_BASE}/carts/merge`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, userId }),
-      });
-      
-      sessionStorage.removeItem("cartSessionId");
-      setSessionId("");
-    } catch (error) {
-      console.error("Error merging carts:", error);
-    }
-  };
-
-  
-  return { 
-    cart, 
-    sessionId, 
-    addToCart, 
-    buyNow, 
-    fetchCart, 
-    mergeGuestToUser, 
-    setItemQty, 
-    removeItem 
+  return {
+    cart,
+    sessionId,
+    fetchCart,
+    addToCart,
+    buyNow,
+    setItemQty,
+    removeItem,
   };
 }

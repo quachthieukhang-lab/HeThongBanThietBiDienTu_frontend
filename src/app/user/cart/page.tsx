@@ -6,29 +6,42 @@ import Image from "next/image";
 import * as AlertDialog from "@radix-ui/react-alert-dialog";
 import { Trash2, Plus, Minus, ShoppingBag } from "lucide-react";
 
-export default function CartPage({ userId }: { userId?: string }) {
-  const { cart, fetchCart, setItemQty, removeItem, mergeGuestToUser, sessionId } = useCart(userId);
+export default function CartPage() {
+  // NOTE: useCart() đã tự xử lý session/token/merge
+  const { cart, fetchCart, setItemQty, removeItem, sessionId} = useCart();
+
   const [loading, setLoading] = useState(true);
   const API_BASE = "http://localhost:3000";
 
   useEffect(() => {
+    let mounted = true;
     const init = async () => {
-      if (!userId && !sessionId) return;
-      if (userId && sessionId) {
-        await mergeGuestToUser(userId);
+      setLoading(true);
+      try {
+        await fetchCart(); // fetch chính xác (dựa trên token/session)
+      } catch (err) {
+        console.error("Init fetchCart error:", err);
+      } finally {
+        if (mounted) setLoading(false);
       }
-      await fetchCart();
-      setLoading(false);
     };
+
     init();
-  }, [userId, sessionId]);
+    return () => { mounted = false; };
+  }, [fetchCart, sessionId]); // refetch khi sessionId hoặc trạng thái login thay đổi
 
   const handleQtyChange = async (item: CartItem, delta: number) => {
     const newQty = item.quantity + delta;
-    if (newQty <= 0) {
-      await removeItem(item.productId, item.variantId);
-    } else {
-      await setItemQty(item.productId, item.variantId, newQty);
+    try {
+      if (newQty <= 0) {
+        // Nếu muốn: gọi removeItem (với dialog) — ở đây ta trực tiếp remove nếu giảm xuống 0
+        await removeItem(item.productId, item.variantId);
+      } else {
+        await setItemQty(item.productId, item.variantId, newQty);
+      }
+      await fetchCart();
+    } catch (err) {
+      console.error("handleQtyChange error:", err);
     }
   };
 
@@ -41,7 +54,7 @@ export default function CartPage({ userId }: { userId?: string }) {
     </div>
   );
 
-  if (cart.length === 0) return (
+  if (!cart || cart.length === 0) return (
     <div className="max-w-6xl mx-auto py-16 text-center">
       <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
         <ShoppingBag className="w-12 h-12 text-gray-400" />
@@ -92,50 +105,43 @@ export default function CartPage({ userId }: { userId?: string }) {
                   />
                 </div>
 
-               {/* Product Info */}
-<div className="flex-1 min-w-0">
-  <h3 className="font-semibold text-gray-900 text-lg mb-1">{item.name}</h3>
-  
- {/* Hiển thị chỉ giá trị facets */}
-{item.facets && typeof item.facets === 'object' && Object.keys(item.facets).length > 0 && (
-  <div className="mb-3">
-    <h4 className="text-sm font-semibold text-gray-900 mb-2">Phiên bản:</h4>
-    <div className="flex flex-wrap gap-2">
-      {Object.values(item.facets).map((value, index) => {
-        let displayValue = value;
-        
-        // Xử lý giá trị boolean
-        if (typeof value === 'boolean') {
-          displayValue = value ? 'Có bơm' : 'Không bơm';
-        }
-        
-        if (!displayValue) return null;
-        
-        return (
-          <span 
-            key={index}
-            className="px-3 py-2 border-2 border-blue-200 bg-blue-50 text-blue-700 rounded-lg text-xs font-small"
-          >
-            {displayValue}
-          </span>
-        );
-      })}
-    </div>
-  </div>
-)}
+                {/* Product Info */}
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-gray-900 text-lg mb-1">{item.name}</h3>
 
-  <p className="text-xl font-bold text-blue-600">
-    {item.price.toLocaleString("vi-VN")}₫
-  </p>
-</div>
+                  {item.facets && typeof item.facets === 'object' && Object.keys(item.facets).length > 0 && (
+                    <div className="mb-3">
+                      <h4 className="text-sm font-semibold text-gray-900 mb-2">Phiên bản:</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {Object.values(item.facets).map((value, index) => {
+                          let displayValue: any = value;
+                          if (typeof value === 'boolean') displayValue = value ? 'Có bơm' : 'Không bơm';
+                          if (!displayValue) return null;
+                          return (
+                            <span 
+                              key={index}
+                              className="px-3 py-2 border-2 border-blue-200 bg-blue-50 text-blue-700 rounded-lg text-xs font-small"
+                            >
+                              {displayValue}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  <p className="text-xl font-bold text-blue-600">
+                    {item.price.toLocaleString("vi-VN")}₫
+                  </p>
+                </div>
 
                 {/* Quantity Controls */}
                 <div className="flex items-center gap-4">
                   <div className="flex items-center border border-gray-300 rounded-lg bg-white">
                     <button
                       onClick={() => handleQtyChange(item, -1)}
-                      className="px-4 py-2 hover:bg-gray-100 transition-colors text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                      disabled={item.quantity <= 1}
+                      className="px-4 py-2 hover:bg-gray-100 transition-colors text-gray-600"
+                      // allow reducing to 0 (will remove). If you prefer preventing 0, re-enable disabled condition
                     >
                       <Minus className="w-4 h-4" />
                     </button>
@@ -174,7 +180,14 @@ export default function CartPage({ userId }: { userId?: string }) {
                           </AlertDialog.Cancel>
                           <AlertDialog.Action asChild>
                             <button 
-                              onClick={() => removeItem(item.productId, item.variantId).then(fetchCart)}
+                              onClick={async () => {
+                                try {
+                                  await removeItem(item.productId, item.variantId);
+                                  await fetchCart();
+                                } catch (err) {
+                                  console.error("Delete action error", err);
+                                }
+                              }}
                               className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium"
                             >
                               Xóa
@@ -213,7 +226,7 @@ export default function CartPage({ userId }: { userId?: string }) {
             </div>
 
             <a 
-              href="/checkout" 
+              href="/user/checkout" 
               className="w-full bg-blue-600 text-white py-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors text-center block mb-4"
             >
               Tiến hành thanh toán
