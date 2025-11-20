@@ -55,61 +55,69 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+ const handleLogin = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setError("");
+  setLoading(true);
 
-    try {
-      const res = await fetch('http://localhost:3000/auth/Login', {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...form,
-          role: selectedRole
-        }),
-      });
-
-      if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(errorText || 'Đăng nhập thất bại');
-      }
-
-      const data = await res.json();
-
-      localStorage.setItem("accessToken", data.accessToken);
-      localStorage.setItem("refreshToken", data.refreshToken);
-      localStorage.setItem("userRole", selectedRole);
-
-      // Gọi API /me để lấy thông tin user (chỉ có email)
-    const userRes = await fetch('http://localhost:3000/auth/me', {
-      headers: { 
-        "Authorization": `Bearer ${data.accessToken}`,
-        "Content-Type": "application/json"
-      },
+  try {
+    // 1) LOGIN
+    const res = await fetch('http://localhost:3000/auth/login', { 
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: form.email,
+        password: form.password
+      }),
     });
 
-    if (userRes.ok) {
-      const userInfo = await userRes.json();
-      localStorage.setItem("userInfo", JSON.stringify(userInfo));
+    if (!res.ok) {
+      throw new Error("Sai email hoặc mật khẩu");
     }
 
-      toast.success(`Đăng nhập thành công với vai trò ${selectedRole === 'admin' ? 'Quản trị viên' : 'Người dùng'}!`);
+    const data = await res.json();
 
-      if (selectedRole === 'admin') {
-        router.push("/admin/dashboard");
-      } else {
-        router.push("/");
-      }
-      router.refresh();
-    } catch (err: any) {
-      setError(err.message || "Sai email hoặc mật khẩu");
-      toast.error('Đăng nhập thất bại!');
-      console.error('Login error:', err);
-    } finally {
-      setLoading(false);
+    // 2) Lưu token
+    localStorage.setItem("accessToken", data.accessToken);
+    localStorage.setItem("refreshToken", data.refreshToken);
+
+    // 3) Lấy userInfo
+    const userRes = await fetch("http://localhost:3000/auth/me", {
+      headers: { Authorization: `Bearer ${data.accessToken}` }
+    });
+
+    const userInfo = await userRes.json();
+    localStorage.setItem("userInfo", JSON.stringify(userInfo));
+    localStorage.setItem("userId", userInfo.sub);
+
+    // 4) MERGE CART (CHỈ GỬI sessionId)
+    const sid = sessionStorage.getItem("cartSessionId");
+    if (sid) {
+      await fetch("http://localhost:3000/carts/merge", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${data.accessToken}`
+        },
+        body: JSON.stringify({ sessionId: sid })  // ⬅⬅⬅ CHỈ sessionId
+      });
+
+      // Remove guest cart
+      sessionStorage.removeItem("cartSessionId");
     }
-  };
+
+    toast.success("Đăng nhập thành công!");
+    router.push("/");
+
+  } catch (err) {
+    console.error(err);
+    toast.error("Đăng nhập thất bại");
+    setError("Sai email hoặc mật khẩu");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="min-h-screen flex bg-white">
