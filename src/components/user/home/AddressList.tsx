@@ -20,8 +20,11 @@ interface Address {
   postalCode?: string;
   isDefault: boolean;
 }
+interface AddressSelectorProps {
+  onSelect?: (addressId: string | null) => void;
+}
 
-export default function AddressSelector() {
+export default function AddressSelector({ onSelect }: AddressSelectorProps) {
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
   const [loading, setLoading] = useState(true);
@@ -44,31 +47,44 @@ export default function AddressSelector() {
   });
 
   useEffect(() => {
-    fetchAddresses();
-  }, []);
+  const token = localStorage.getItem("accessToken");
+  if (!token) {
+    setLoading(false); // không còn loading
+    setAddresses([]);  // giữ rỗng danh sách
+    setSelectedAddress(null); // không có địa chỉ nào được chọn
+    return;
+  }
+
+  fetchAddresses();
+}, []);
 
   const fetchAddresses = async () => {
-    try {
-      const token = localStorage.getItem("accessToken");
-      const res = await fetch("http://localhost:3000/addresses/me", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+  try {
+    const token = localStorage.getItem("accessToken");
+    const res = await fetch("http://localhost:3000/addresses/me", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-      if (res.ok) {
-        const addressesData = await res.json();
-        setAddresses(addressesData);
-        
-        const defaultAddress = addressesData.find((addr: Address) => addr.isDefault) || addressesData[0];
-        setSelectedAddress(defaultAddress || null);
-      }
-    } catch (error) {
-      console.error("Error fetching addresses:", error);
-    } finally {
-      setLoading(false);
+    if (res.ok) {
+      const data = await res.json();
+      setAddresses(data);
+
+      const defaultAddr =
+        data.find((a: Address) => a.isDefault) || data[0] || null;
+
+      setSelectedAddress(defaultAddr);
+
+      if (onSelect) {
+  onSelect(defaultAddr?._id ?? null);
+}
     }
-  };
+  } catch (error) {
+    console.error(error);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleSetDefault = async (addressId: string) => {
     try {
@@ -229,11 +245,20 @@ export default function AddressSelector() {
       </div>
     );
   }
+  if (!localStorage.getItem("accessToken")) {
+  return (
+    <div className="flex items-center gap-2 text-white/80">
+      <MapPin className="w-4 h-4" />
+      <span className="text-sm">Địa chỉ</span>
+    </div>
+  );
+}
 
   return (
+    
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
-        <button className="flex items-center gap-2 text-white/80 hover:text-cyan-300 transition-colors font-medium">
+        <button className="flex items-center gap-2 hover:text-cyan-300 transition-colors font-medium">
           <MapPin className="w-4 h-4" />
           <span className="text-sm max-w-[180px] truncate">
             {selectedAddress 
@@ -397,6 +422,10 @@ export default function AddressSelector() {
               addresses.map((address) => (
                 <div
                   key={address._id}
+                   onClick={() => {
+                        setSelectedAddress(address);
+                        onSelect(address._id);
+                    }}
                   className={`p-3 rounded-lg border ${
                     address.isDefault 
                       ? "border-blue-500 bg-blue-50" 
