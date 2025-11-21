@@ -2,70 +2,71 @@
 
 import React from 'react'
 import { CheckCircle, Trash2 } from 'lucide-react'
-import { Button } from '@/components/admin/ui/button'
+import { format } from 'date-fns';
+import { vi } from 'date-fns/locale';
 
 export default function ReviewTable({ reviews, onApprove, onDelete }: any) {
   return (
-    <div className="w-full border rounded-lg overflow-hidden shadow bg-white">
-      <table className="w-full text-sm">
-        <thead className="bg-gray-100 text-gray-700">
-          <tr>
-            <th className="px-4 py-2 text-left">#</th>
-            <th className="px-4 py-2 text-left">Người dùng</th>
-            <th className="px-4 py-2 text-left">Sản phẩm</th>
-            <th className="px-4 py-2 text-left">Nội dung</th>
-            <th className="px-4 py-2 text-left">Số sao</th>
-            <th className="px-4 py-2 text-left">Trạng thái</th>
-            <th className="px-4 py-2 text-left">Ngày gửi</th>
-            <th className="px-4 py-2 text-center">Thao tác</th>
-          </tr>
-        </thead>
-        <tbody>
-          {reviews.length === 0 ? (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm text-left">
+          <thead className="bg-gray-50 text-gray-600 font-medium border-b border-gray-200">
             <tr>
-              <td colSpan={8} className="text-center py-6 text-gray-500">
-                Không có đánh giá nào
-              </td>
+              <th className="px-6 py-4">Người dùng</th>
+              <th className="px-6 py-4">Sản phẩm</th>
+              <th className="px-6 py-4">Nội dung</th>
+              <th className="px-6 py-4 text-center">Số sao</th>
+              <th className="px-6 py-4">Trạng thái</th>
+              <th className="px-6 py-4">Ngày gửi</th>
+              <th className="px-6 py-4 text-center">Thao tác</th>
             </tr>
-          ) : (
-            reviews.map((r: any, index: number) => (
-              <tr key={r._id || index} className="border-t hover:bg-gray-50">
-                <td className="px-4 py-2">{index + 1}</td>
-                <td className="px-4 py-2">{r.userId?.name || 'Ẩn danh'}</td>
-                <td className="px-4 py-2">{r.productId?.name || 'Không rõ'}</td>
-                <td className="px-4 py-2">{r.comment || '--'}</td>
-                <td className="px-4 py-2">{r.rating} ⭐</td>
-                <td className="px-4 py-2">
-                  <span
-                    className={`px-2 py-1 rounded text-xs ${
-                      r.status === 'approved'
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-yellow-100 text-yellow-700'
-                    }`}
-                  >
-                    {r.status === 'approved' ? 'Đã duyệt' : 'Chờ duyệt'}
-                  </span>
-                </td>
-                <td className="px-4 py-2">
-                  {r.createdAt ? new Date(r.createdAt).toLocaleDateString() : '--'}
-                </td>
-                <td className="px-4 py-2 text-center">
-                  <div className="flex justify-center gap-2">
-                    {r.status !== 'approved' && (
-                      <Button size="sm" variant="outline" onClick={() => onApprove(r._id)}>
-                        <CheckCircle className="w-4 h-4 text-green-600" />
-                      </Button>
-                    )}
-                    <Button size="sm" variant="outline" onClick={() => onDelete(r._id)}>
-                      <Trash2 className="w-4 h-4 text-red-600" />
-                    </Button>
-                  </div>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {reviews.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="text-center py-10 text-gray-500">
+                  Không có đánh giá nào
                 </td>
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+            ) : (
+              reviews.map((r: any) => (
+                <tr key={r._id} className="hover:bg-gray-50 transition">
+                  <td className="px-6 py-4 font-medium text-gray-900">{r.userId?.name || 'Ẩn danh'}</td>
+                  <td className="px-6 py-4 text-gray-600">{r.productId?.name || 'Không rõ'}</td>
+                  <td className="px-6 py-4 text-gray-600 max-w-xs truncate">{r.comment || '--'}</td>
+                  <td className="px-6 py-4 text-center font-semibold text-amber-600">{r.rating} ⭐</td>
+                  <td className="px-6 py-4">
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        r.status === 'approved'
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-yellow-100 text-yellow-700'
+                      }`}
+                    >
+                      {r.status === 'approved' ? 'Đã duyệt' : 'Chờ duyệt'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-gray-600">
+                    {r.createdAt ? format(new Date(r.createdAt), 'dd/MM/yyyy', { locale: vi }) : '--'}
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <div className="flex justify-center gap-2">
+                      {r.status !== 'approved' && (
+                        <button onClick={() => onApprove(r._id)} className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition" title="Duyệt">
+                          <CheckCircle size={18} />
+                        </button>
+                      )}
+                      <button onClick={() => onDelete(r._id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition" title="Xóa">
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }
