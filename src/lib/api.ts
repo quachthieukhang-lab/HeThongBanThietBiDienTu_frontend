@@ -3,9 +3,8 @@ export async function apiFetch(url: string, options: RequestInit = {}) {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
   const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`
 
-  const token =
-    typeof window !== 'undefined' ? localStorage.getItem('access_token') : null
-  
+  const token =  localStorage.getItem('accessToken') || null
+  console.log(token)
   const isFormData = options.body instanceof FormData
 
   const headers: Record<string, string> = {

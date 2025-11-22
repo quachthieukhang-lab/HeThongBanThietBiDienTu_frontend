@@ -40,7 +40,7 @@ export default function UsersPage() {
   // Thêm người dùng mới
   const handleAdd = async (form: any) => {
   try {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('accessToken');
     console.log('Access Token gửi đi:', token);
 
     const passwordHash = await bcrypt.hash(form.password, 10);

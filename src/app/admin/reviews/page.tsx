@@ -15,7 +15,7 @@ export default function ReviewsPage() {
     setLoading(true)
     try {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000'
-      const token = localStorage.getItem('access_token') || ''
+      const token = localStorage.getItem('accessToken') || ''
 
       // Tạo URL query
       const query = new URLSearchParams({ status: 'pending' })
@@ -56,7 +56,7 @@ export default function ReviewsPage() {
   const handleApprove = async (id: string) => {
     try {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000'
-      const token = localStorage.getItem('access_token')
+      const token = localStorage.getItem('accessToken')
       const res = await apiFetch(`${backendUrl}/reviews/${id}`, {
         method: 'PATCH',
         headers: {
@@ -82,7 +82,7 @@ export default function ReviewsPage() {
   const handleDelete = async (id: string) => {
     try {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000'
-      const token = localStorage.getItem('access_token')
+      const token = localStorage.getItem('accessToken')
       const res = await apiFetch(`${backendUrl}/reviews/${id}`, {
         method: 'DELETE',
         headers: {

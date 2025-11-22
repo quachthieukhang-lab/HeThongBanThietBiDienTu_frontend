@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ShoppingCart, User, Search, ChevronDown, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation"; // Thêm dòng này
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import useSWR from "swr";
 import { useState, useEffect } from "react";
@@ -11,6 +12,7 @@ import AddressList from "@/components/user/home/AddressList";
 import { useCartStore } from "@/app/user/hooks/cartStore";
 
 export function Header() {
+  const router = useRouter(); // Sử dụng hook useRouter
   const [userEmail, setUserEmail] = useState<string | null>(null);
    const cartCount = useCartStore((state) => state.cartCount);
    
@@ -53,7 +55,7 @@ export function Header() {
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("userInfo");
     localStorage.removeItem("userRole");
-    window.location.href = "/";
+    router.push("/"); // Thay thế bằng router.push
   };
 
   const navItems = [
