@@ -209,7 +209,7 @@ export default function SubcategoryModal({
   const [bannerFile, setBannerFile] = useState<File | null>(null)
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [previewBanner, setPreviewBanner] = useState<string | null>(null)
-
+  
   // --- Load dữ liệu khi chỉnh sửa ---
   useEffect(() => {
     if (editing) {

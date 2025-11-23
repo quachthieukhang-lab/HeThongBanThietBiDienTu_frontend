@@ -57,7 +57,9 @@ export default function AttributeTemplateModal({
     isActive: true,
   })
   const [loading, setLoading] = useState(false)
-
+  useEffect(() => {
+    console.log(form)
+  },[form])
   useEffect(() => {
     if (editing) {
       setForm({

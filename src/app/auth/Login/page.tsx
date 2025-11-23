@@ -107,8 +107,15 @@ export default function LoginPage() {
     }
 
     toast.success("Đăng nhập thành công!");
-    router.push("/");
+    console.log(userInfo);
 
+    // 5) Chuyển hướng dựa trên vai trò
+    if (userInfo.roles.includes("admin")) {
+      router.push("/admin/dashboard");
+    } else {
+      router.push("/");
+    }
+    
   } catch (err) {
     console.error(err);
     toast.error("Đăng nhập thất bại");

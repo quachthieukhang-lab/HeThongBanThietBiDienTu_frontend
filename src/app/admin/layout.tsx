@@ -13,34 +13,18 @@ interface AdminLayoutProps {
 }
 
 // Define the fetcher function for the logout mutation
-async function logoutFetcher(url: string, { arg }: { arg: { refreshToken: string | null } }) {
-  const res = await fetch(`http://localhost:3000${url}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ refreshToken: arg.refreshToken }),
-  })
-
-  if (!res.ok) {
-    const errorInfo = await res.json().catch(() => ({ message: 'An unknown error occurred during logout.' }))
-    throw new Error(errorInfo.message || 'Logout failed')
-  }
-
-  return res.json()
-}
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname()
   const router = useRouter()
   const [openCategoryMenu, setOpenCategoryMenu] = useState(false)
-  const { trigger: logoutTrigger } = useSWRMutation('/auth/logout', logoutFetcher)
 
   const handleLogout = async () => {
-    const refreshToken = localStorage.getItem('refresh_token')
-    await logoutTrigger({ refreshToken })
-    localStorage.removeItem('access_token')
-    localStorage.removeItem('refresh_token')
-    toast.success('Đăng xuất thành công!')
-    router.push('/') // Redirect to the login page
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("userInfo");
+    localStorage.removeItem("userRole");
+    router.push("/auth/login"); // Thay thế bằng router.push
   }
   const links = [
     { label: 'Trang Chủ', href: '/admin/dashboard', icon: <LayoutDashboard size={18} /> },
@@ -53,7 +37,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     },
     { label: 'Mẫu Thuộc Tính', href: '/admin/attribute-templates', icon: <Tag size={18} /> },
     { label: 'Sản Phẩm', href: '/admin/products', icon: <Package size={18} /> },
-    { label: 'Gói Dịch Vụ Sản Phẩm', href: '/admin/packages', icon: <Package size={18} /> },
+    { label: 'Biến Thể Sản Phẩm', href: '/admin/product-variants', icon: <Package size={18} /> },
+    { label: 'Gói Dịch Vụ Sản Phẩm', href: '/admin/service-packages', icon: <Package size={18} /> },
     { label: 'Quản Lý Đơn Hàng', href: '/admin/orders', icon: <Tag size={18} /> },
     { label: 'Thương Hiệu', href: '/admin/brands', icon: <Star size={18} /> },
     { label: 'Đánh Giá', href: '/admin/reviews', icon: <Star size={18} /> },
