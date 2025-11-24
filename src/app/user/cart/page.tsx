@@ -129,6 +129,19 @@ export default function CartPage() {
                       </div>
                     </div>
                   )}
+                  {item.servicePackages && item.servicePackages.length > 0 && (
+                    <div className="mt-2 space-y-1">
+                      <h4 className="text-sm font-semibold text-gray-700">Gói dịch vụ đi kèm:</h4>
+                      <ul className="text-sm text-gray-600">
+                        {item.servicePackages.map(sp => (
+                          <li key={sp._id} className="flex justify-between border-b border-gray-100 py-1">
+                            <span>{sp.name}{sp.duration ? ` (${sp.duration})` : ''}</span>
+                            <span className="font-medium text-blue-600">{sp.price.toLocaleString()}₫</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
 
                   <p className="text-xl font-bold text-blue-600">
                     {item.price.toLocaleString("vi-VN")}₫

@@ -72,7 +72,7 @@ export default function CheckoutSummary({
       }
 
       toast.success("Đặt hàng thành công!");
-      window.location.href = `user/orders`;
+      window.location.href = `/user/orders`;
     } catch (err) {
       console.log(err);
       toast.error("Không thể đặt hàng");

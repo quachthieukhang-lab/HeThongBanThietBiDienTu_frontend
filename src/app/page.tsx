@@ -6,6 +6,8 @@ import ProductList from "@/components/user/product/ProductList";
 import WishlistSection from "@/components/user/home/WishListSection";
 import { Footer } from "@/components/user/Footer";
 import { Header } from "@/components/user/Header";
+import ChatWidget from "@/components/user/ChatWidget";  
+
 export default function Home() {
   
   return (
@@ -19,6 +21,7 @@ export default function Home() {
         <WishlistSection />
         <ProductList />
     </div>
+    <ChatWidget />
     <Footer />
     </>
     
