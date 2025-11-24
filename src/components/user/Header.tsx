@@ -10,6 +10,7 @@ import { apiClient } from "@/lib/apiClient";
 import type { CategoryLite, SubcategoryWithImage } from "@/app/user/types/category";
 import AddressList from "@/components/user/home/AddressList";
 import { useCartStore } from "@/app/user/hooks/cartStore";
+import SearchAutocomplete from "./SearchAutoComplete";
 
 export function Header() {
   const router = useRouter(); // Sử dụng hook useRouter
@@ -151,16 +152,10 @@ export function Header() {
           </DropdownMenu.Root>
 
           {/* Search Bar - Chiếm nhiều không gian hơn */}
-          <div className="flex-1 max-w-3xl min-w-[300px]">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-cyan-400" size={18} />
-              <input
-                type="text"
-                placeholder="🔍 Tìm kiếm iPhone, Samsung, Macbook, Máy lạnh, Tủ lạnh..."
-                className="w-full pl-8 pr-4 py-2 bg-white/10 backdrop-blur-sm border border-cyan-500/30 rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition-all text-white placeholder-white/60 text-sm"
-              />
-            </div>
+          <div className="flex-1 max-w-3xl min-w-[300px] text-white/80">
+            <SearchAutocomplete />
           </div>
+
 
           {/* User & Cart & Address - Sắp xếp gọn gàng */}
           <div className="flex items-center gap-2 flex-shrink-0">

@@ -46,8 +46,6 @@ export function useSlugToIdMap<T extends SlugEntity>(endpoint: string) {
           map[item.slug.toLowerCase()] = item._id;
         }
       }
-
-      console.log(`✅ useSlugToIdMap created map for ${endpoint}:`, map);
       return map;
     }
   );

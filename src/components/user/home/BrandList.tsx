@@ -5,17 +5,26 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { BrandLite } from '@/app/user/types/brand'
 import { apiClient } from "@/lib/apiClient";
-import { mockApi } from "@/mock";
-export default function BrandList() {
-   const fetchBrands = async (): Promise<BrandLite[]> => {
-  const res = await apiClient<any>("/brands", mockApi.getBrands);
-  return Array.isArray(res) ? res : res.items ?? [];
+
+type PaginatedBrands = {
+  items: BrandLite[];
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
 };
 
-  const { data: brands, error, isLoading } = useSWR<BrandLite[]>("brands", fetchBrands);
+export default function BrandList() {
+  const fetchBrands = async (): Promise<PaginatedBrands> => {
+  const res = await apiClient<PaginatedBrands>("/brands");
+  return res;
+};
+
+  const { data, error, isValidating } = useSWR<PaginatedBrands>("/brands", fetchBrands);
+const brands = data?.items ?? [];
 
   if (error) return <p className="text-red-500 text-center mt-4">Không thể tải danh mục hãng.</p>
-  if (isLoading) return <p className="text-gray-500 text-center mt-4">Đang tải...</p>
+  if (!brands && isValidating) return <p className="text-gray-500 text-center mt-4">Đang tải...</p>
 
   return (
     <section className="py-8">
@@ -24,7 +33,7 @@ export default function BrandList() {
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-6">
         {brands?.map((brand: BrandLite) => (
           <Link
-            href={`/brands/${brand.slug}`}
+            href={`/user/brand/${brand.slug}`}
             key={brand._id}
             className="flex flex-col items-center justify-center border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow bg-white"
           >
@@ -35,6 +44,7 @@ export default function BrandList() {
                 width={64}
                 height={64}
                 className="object-contain mb-2"
+                unoptimized
               />
             ) : (
               <div className="w-20 h-20 bg-gray-100 flex items-center justify-center mb-2 rounded-lg text-gray-400 text-sm">
@@ -43,7 +53,6 @@ export default function BrandList() {
             )}
 
             <h3 className="text-sm font-medium text-gray-700 text-center">{brand.name}</h3>
-           
           </Link>
         ))}
       </div>
