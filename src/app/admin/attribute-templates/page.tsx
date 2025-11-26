@@ -21,7 +21,7 @@ export default function AttributeTemplatesPage() {
 
   const loadSubcategories = async () => {
     try {
-      const res = await apiFetch(`${backendUrl}/subcategories?limit=100`)
+      const res = await apiFetch(`${backendUrl}/subcategories`)
       const data = await res.json()
       setSubcategories(data.items || [])
     } catch (err) {

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { X, PlusCircle, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -57,6 +57,13 @@ export default function AttributeTemplateModal({
     isActive: true,
   })
   const [loading, setLoading] = useState(false)
+
+  const sortedSubcategories = useMemo(
+    () =>
+      [...subcategories].sort((a, b) => a.name.localeCompare(b.name, 'vi')),
+    [subcategories]
+  )
+
   useEffect(() => {
     console.log(form)
   },[form])
@@ -192,7 +199,7 @@ export default function AttributeTemplateModal({
                   required
                 >
                   <option value="">-- Chọn subcategory --</option>
-                  {subcategories.map((s) => (
+                  {sortedSubcategories.map((s) => (
                     <option key={s._id} value={s._id}>
                       {s.name}
                     </option>
