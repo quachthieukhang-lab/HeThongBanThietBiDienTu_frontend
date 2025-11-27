@@ -24,6 +24,8 @@ export default function ProductModal({ open, onClose, onCreate, onUpdate, editin
     brandId: '',
     isPublished: true,
     specs: {},
+    priceFrom: 0,
+    priceTo: 0,
   })
   const [categories, setCategories] = useState<any[]>([])
   const [subcategories, setSubcategories] = useState<any[]>([])
@@ -33,6 +35,10 @@ export default function ProductModal({ open, onClose, onCreate, onUpdate, editin
   const [loading, setLoading] = useState(false)
   const [imagePreviews, setImagePreviews] = useState<{thumbnail?: string, images: string[]}>({ images: [] })
   const [filteredSubcategories, setFilteredSubcategories] = useState<any[]>([])
+
+  useEffect(() => {
+    console.log('form changed:', form)
+  }, [form])
 
   // Fetch categories, subcategories, brands
   const fetchData = async () => {
@@ -217,6 +223,8 @@ export default function ProductModal({ open, onClose, onCreate, onUpdate, editin
         subcategoryId: editingSubcategoryId,
         brandId: editingBrandId,
         isPublished: editing.isPublished !== undefined ? editing.isPublished : true,
+        priceFrom: editing.priceFrom || 0,
+        priceTo: editing.priceTo || 0,
         specs: editing.specs || {},
       })
       
@@ -233,6 +241,8 @@ export default function ProductModal({ open, onClose, onCreate, onUpdate, editin
         subcategoryId: '',
         brandId: '',
         isPublished: true,
+        priceFrom: 0,
+        priceTo: 0,
         specs: {},
       })
       setThumbnail(null)
@@ -338,8 +348,8 @@ export default function ProductModal({ open, onClose, onCreate, onUpdate, editin
       data.append('categoryId', form.categoryId);
       data.append('subcategoryId', form.subcategoryId);
       data.append('isPublished', String(form.isPublished));
-      data.append('priceFrom', '0');
-      data.append('priceTo', '0');
+      data.append('priceFrom', String(form.priceFrom || 0));
+      data.append('priceTo', String(form.priceTo || 0));
       
       if (form.brandId && form.brandId.trim() !== '') {
         data.append('brandId', form.brandId);
@@ -508,6 +518,32 @@ export default function ProductModal({ open, onClose, onCreate, onUpdate, editin
                   <option key={b._id} value={b._id}>{b.name}</option>
                 ))}
               </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Giá từ</label>
+                <input
+                  type="number"
+                  placeholder="0"
+                  value={form.priceFrom}
+                  onChange={e => setForm({ ...form, priceFrom: Number(e.target.value) })}
+                  className="w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  min="0"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Giá đến</label>
+                <input
+                  type="number"
+                  placeholder="0"
+                  value={form.priceTo}
+                  onChange={e => setForm({ ...form, priceTo: Number(e.target.value) })}
+                  className="w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  min="0"
+                />
+              </div>
             </div>
 
             <div className="flex items-center gap-2 p-3 border rounded">
