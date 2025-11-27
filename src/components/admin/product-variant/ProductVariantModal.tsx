@@ -103,8 +103,12 @@ export default function ProductVariantModal({
   useEffect(() => {
     if (form.productId) {
       const selectedProduct = products.find(p => p._id === form.productId)
+      console.log('selectedProduct:', selectedProduct)
+      
       if (selectedProduct && selectedProduct.templateId) {
         const template = attributeTemplates[selectedProduct.templateId]
+       
+        console.log('template:', template)
         setCurrentTemplate(template)
         
         // QUAN TRỌNG: Chỉ reset attributes khi tạo mới, không reset khi cập nhật
