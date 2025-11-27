@@ -1,24 +1,18 @@
-// types/cart.ts
-export type CartItem = {
+export interface ServicePackageLite {
   _id: string;
-  cartId: string;
+  name: string;
+  price: number;
+  description?: string;
+  duration?: string;
+}
+
+export interface CartItem {
   productId: string;
   variantId?: string;
-  name?: string;
+  name: string;
   price: number;
   quantity: number;
-  image?: string;
-  meta?: Record<string, any>;
-  variantSku?: string;   
-  variantName?: string;   
-};
-
-export type Cart = {
-  _id: string;
-  userId?: string;
-  sessionId?: string;
-  items: CartItem[];
-  subtotal: number;
-  totalQuantity: number;
-  totalPrice: number;
-};
+  thumbnail?: string;
+  facets?: any[];
+  servicePackages?: ServicePackageLite[]; 
+}

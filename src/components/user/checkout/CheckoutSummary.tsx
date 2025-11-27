@@ -27,7 +27,7 @@ export default function CheckoutSummary({
     (sum, item) => sum + item.price * item.quantity,
     0
   );
-  const shippingFee = 30000;
+  const shippingFee = 150000;
   const total = subtotal + shippingFee;
 
   const handlePlaceOrder = async () => {
@@ -72,7 +72,7 @@ export default function CheckoutSummary({
       }
 
       toast.success("Đặt hàng thành công!");
-      window.location.href = `user/orders`;
+      window.location.href = `/user/orders`;
     } catch (err) {
       console.log(err);
       toast.error("Không thể đặt hàng");
@@ -89,7 +89,7 @@ export default function CheckoutSummary({
       </div>
 
       <div className="flex justify-between text-gray-600">
-        <span>Phí vận chuyển</span>
+        <span>Gói dịch vụ đi kèm</span>
         <span>{shippingFee.toLocaleString("vi-VN")}₫</span>
       </div>
 

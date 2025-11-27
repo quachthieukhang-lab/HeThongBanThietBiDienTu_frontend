@@ -4,16 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import type { ProductLite, ProductVariant } from "@/app/user/types/product";
 import toast from "react-hot-toast";
 import { useCartStore } from "@/app/user/hooks/cartStore";
-
-export interface CartItem {
-  productId: string;
-  variantId?: string;
-  name: string;
-  price: number;
-  quantity: number;
-  thumbnail?: string;
-  facets?: any[];
-}
+import type { CartItem } from "@/app/user/types/cart";
 
 export function useCart() {
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -92,6 +83,7 @@ export function useCart() {
         productId: product._id,
         quantity,
         sessionId, // luôn gửi sessionId
+         servicePackages: product.servicePackages || [],
       };
 
       if (variant) payload.variantId = variant._id;

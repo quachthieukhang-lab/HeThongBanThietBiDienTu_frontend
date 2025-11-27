@@ -3,16 +3,26 @@
 import Image from "next/image";
 import { useState, useMemo } from "react";
 import type { ReviewLite } from "@/app/user/types/review";
+import ReviewForm from "./ReviewForm";
+import Pagination from "./Pagination";
 
 interface Props {
   reviews: ReviewLite[];
   total: number;
-  limit?: number;
+  productId: string;
+  productName: string;
 }
 
-export default function ProductReview({ reviews, total, limit = 3 }: Props) {
-  const [showAll, setShowAll] = useState(false);
-  const reviewsToShow = showAll ? reviews : reviews.slice(0, limit);
+export default function ProductReview({ reviews, total, productId, productName }: Props) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const pageSize = 10;
+  
+  // Tính toán reviews để hiển thị theo trang
+  const displayedReviews = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    return reviews.slice(startIndex, startIndex + pageSize);
+  }, [reviews, currentPage]);
 
   // Tính rating trung bình và phân bố
   const { avgRating, ratingDistribution } = useMemo(() => {
@@ -54,7 +64,15 @@ export default function ProductReview({ reviews, total, limit = 3 }: Props) {
         
         {/* Header với rating summary */}
         <div className="border-b border-gray-200 pb-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Đánh giá sản phẩm</h2>
+          <div className="flex justify-between items-start mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">Đánh giá sản phẩm</h2>
+            <button
+              onClick={() => setShowReviewForm(true)}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+            >
+              Viết đánh giá
+            </button>
+          </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Overall rating */}
@@ -89,7 +107,7 @@ export default function ProductReview({ reviews, total, limit = 3 }: Props) {
         </div>
 
         {/* Review list */}
-        {reviewsToShow.length === 0 ? (
+        {displayedReviews.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-gray-400 text-6xl mb-4">★</div>
             <p className="text-gray-500 text-lg">Chưa có đánh giá nào</p>
@@ -97,7 +115,7 @@ export default function ProductReview({ reviews, total, limit = 3 }: Props) {
           </div>
         ) : (
           <div className="space-y-6">
-            {reviewsToShow.map((review) => {
+            {displayedReviews.map((review) => {
               const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
               
               return (
@@ -170,18 +188,29 @@ export default function ProductReview({ reviews, total, limit = 3 }: Props) {
           </div>
         )}
 
-        {/* Load more button */}
-        {!showAll && total > limit && (
-          <div className="text-center pt-4">
-            <button
-              className="px-8 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
-              onClick={() => setShowAll(true)}
-            >
-              Xem thêm {total - limit} đánh giá
-            </button>
-          </div>
+        {/* Pagination */}
+        {total > pageSize && (
+          <Pagination
+            total={total}
+            pageSize={pageSize}
+            onChange={setCurrentPage}
+          />
         )}
       </div>
+
+      {/* Review Form Modal */}
+      {showReviewForm && (
+        <ReviewForm
+          productId={productId}
+          productName={productName}
+          onClose={() => setShowReviewForm(false)}
+          onSubmit={(review) => {
+            console.log('New review submitted:', review);
+            // TODO: Handle review submission
+            setShowReviewForm(false);
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import type { ProductLite, ProductVariant } from "@/app/user/types/product";
 import { useCart } from "@/app/user/hooks/useCart";
 import {
@@ -19,21 +19,32 @@ import {
   PlusIcon,
   PhoneIcon,
 } from "@heroicons/react/24/outline";
+
 interface Props {
   product: ProductLite;
   variants: ProductVariant[];
 }
 
 export default function ProductMainInfo({ product, variants }: Props) {
-  const { name, images = [], priceFrom, priceTo } = product;
+  const { name, images = [], priceFrom, priceTo, servicePackages = [] } = product;
   const { addToCart, buyNow } = useCart();
   const [currentImage, setCurrentImage] = useState<string>(images[0] || "");
+  const [selectedServicePackage, setSelectedServicePackage] = useState(
+    servicePackages[0] || null
+  );
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
     variants[0] || null
   );
- 
-  
-  const displayPrice = selectedVariant?.price || priceFrom;
+
+  // Tính tổng giá
+  const totalPrice = useMemo(() => {
+    const basePrice = selectedVariant?.price || priceFrom || 0;
+    const servicePrice = selectedServicePackage?.price || 0;
+    return basePrice + servicePrice;
+  }, [selectedVariant, selectedServicePackage, priceFrom]);
+
+  // Giá hiển thị ban đầu (chỉ sản phẩm)
+  const displayPrice = selectedVariant?.price || priceFrom || 0;
   const comparePrice = selectedVariant?.compareAtPrice || priceTo;
 
   return (
@@ -56,7 +67,6 @@ export default function ProductMainInfo({ product, variants }: Props) {
                           <StarIcon key={i} className="w-5 h-5 fill-current" />
                         ))}
                       </div>
-                    
                     </div>
                     <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
                     <span className="text-sm text-green-600 font-medium">✓ Còn hàng</span>
@@ -155,7 +165,7 @@ export default function ProductMainInfo({ product, variants }: Props) {
               {/* Box giá & mua hàng */}
               <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
                 
-                {/* Giá */}
+                Giá sản phẩm
                 <div className="mb-6">
                   {comparePrice && comparePrice > displayPrice ? (
                     <div className="space-y-2">
@@ -203,23 +213,72 @@ export default function ProductMainInfo({ product, variants }: Props) {
                   </div>
                 )}
 
+                {/* Service Packages */}
+                {servicePackages.length > 0 && (
+                  <div className="mb-6">
+                    <div className="flex justify-between items-center mb-3">
+                      <h3 className="text-sm font-semibold text-gray-900">Gói dịch vụ:</h3>
+                      <span className="text-lg font-bold text-blue-600">
+                        {totalPrice.toLocaleString('vi-VN')}₫
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 gap-2">
+                      {servicePackages.map(sp => {
+                        const isSelected = selectedServicePackage?._id === sp._id;
+                        return (
+                          <button
+                            key={sp._id}
+                            onClick={() => setSelectedServicePackage(sp)}
+                            className={`p-3 border-2 rounded-lg text-left transition-all ${
+                              isSelected
+                                ? "border-blue-500 bg-blue-50 shadow-sm"
+                                : "border-gray-200 hover:border-gray-300 bg-white"
+                            }`}
+                          >
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <div className={`font-medium ${
+                                  isSelected ? "text-blue-700" : "text-gray-900"
+                                }`}>
+                                  {sp.name}
+                                </div>
+                                {sp.description && (
+                                  <div className="text-xs text-gray-500 mt-1">{sp.description}</div>
+                                )}
+                                {sp.duration && (
+                                  <div className="text-xs text-gray-400 mt-1">Thời hạn: {sp.duration}</div>
+                                )}
+                              </div>
+                              <div className={`font-semibold text-sm ml-3 ${
+                                isSelected ? "text-blue-700" : "text-blue-600"
+                              }`}>
+                                +{sp.price.toLocaleString('vi-VN')}₫
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {/* Action buttons */}
                 <div className="space-y-3">
-        <button
-          onClick={() => buyNow(product,selectedVariant ?? undefined)}
-          className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 flex items-center justify-center gap-2"
-        >
-          <ShoppingBagIcon className="w-5 h-5" />
-          Mua ngay
-        </button>
-        <button
-          onClick={() => addToCart(product, selectedVariant ?? undefined)}
-          className="w-full border-2 border-blue-600 text-blue-600 py-4 rounded-xl font-semibold hover:bg-blue-50 transition-all flex items-center justify-center gap-2"
-        >
-          <PlusIcon className="w-5 h-5" />
-          Thêm vào giỏ hàng
-        </button>
-      </div>
+                  <button
+                    onClick={() => buyNow(product, selectedVariant ?? undefined)}
+                    className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 flex items-center justify-center gap-2"
+                  >
+                    <ShoppingBagIcon className="w-5 h-5" />
+                    Mua ngay
+                  </button>
+                  <button
+                    onClick={() => addToCart(product, selectedVariant ?? undefined)}
+                    className="w-full border-2 border-blue-600 text-blue-600 py-4 rounded-xl font-semibold hover:bg-blue-50 transition-all flex items-center justify-center gap-2"
+                  >
+                    <PlusIcon className="w-5 h-5" />
+                    Thêm vào giỏ hàng 
+                  </button>
+                </div>
 
                 {/* Additional info */}
                 <div className="mt-4 space-y-2 text-sm text-gray-600">
