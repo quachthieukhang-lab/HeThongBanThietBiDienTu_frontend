@@ -165,7 +165,7 @@ export default function ProductMainInfo({ product, variants }: Props) {
               {/* Box giá & mua hàng */}
               <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
                 
-                {/* Giá sản phẩm
+                Giá sản phẩm
                 <div className="mb-6">
                   {comparePrice && comparePrice > displayPrice ? (
                     <div className="space-y-2">
@@ -186,7 +186,7 @@ export default function ProductMainInfo({ product, variants }: Props) {
                       {displayPrice.toLocaleString('vi-VN')}₫
                     </span>
                   )}
-                </div> */}
+                </div>
 
                 {/* Variant selector */}
                 {variants.length > 0 && (

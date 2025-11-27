@@ -3,10 +3,10 @@
 import { useState } from "react";
 import useSWR from "swr";
 import Link from "next/link";
+import Image from "next/image";
 import type { SubcategoryWithImage } from "@/app/user/types/category";
 import { apiClient } from "@/lib/apiClient";
-import FAIcon from "@/components/user/home/FAIcon";
-import { getFAIcon } from "@/lib/getFAIcon";
+
 export default function SubcategoriesSection() {
   const [showAll, setShowAll] = useState(false);
 
@@ -49,9 +49,8 @@ export default function SubcategoriesSection() {
   const displayList = showAll
     ? featuredSubcategories
     : featuredSubcategories.slice(0, initialDisplayCount);
- 
 
-return (
+  return (
     <section className="py-16 bg-slate-50">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
@@ -64,35 +63,46 @@ return (
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-5">
-          
-          {displayList.map((s) => {
-  console.log("ICON RAW:", s.icon, " → ", getFAIcon(s.icon));
+          {displayList.map((s, index) => {
+            const uniqueKey = s._id?.$oid || s._id || `fallback-${index}`;
+            
+            // Xử lý đường dẫn ảnh giống như ProductCard
+            const imageSrc = s.image 
+              ? `http://localhost:3000/${s.image}`
+              : null;
 
-  return (
-    <Link
-      key={s._id}
-      href={`/user/subcategories/${s.slug}`}
-      className="group bg-white rounded-xl p-5 flex flex-col items-center text-center border border-slate-200 shadow-xs hover:shadow-md hover:border-slate-300 transition-all duration-300 hover:-translate-y-1"
-    >
-      <div className="w-16 h-16 mb-4 flex items-center justify-center bg-slate-100 rounded-xl group-hover:bg-slate-200 transition-colors">
-        {s.icon ? (
-          <FAIcon
-            icon={s.icon}
-            className="w-8 h-8 text-slate-700 group-hover:text-slate-900"
-          />
-        ) : (
-          <div className="w-8 h-8 rounded bg-slate-200" />
-        )}
-      </div>
-
-      <p className="text-sm font-medium text-slate-700 group-hover:text-slate-900 transition-colors leading-tight">
-        {s.name}
-      </p>
-    </Link>
-  );
-})}
-
-          
+            return (
+              <Link
+                key={uniqueKey}
+                href={`/user/subcategories/${s.slug}`}
+                className="group bg-white rounded-xl p-5 flex flex-col items-center text-center border border-slate-200 shadow-xs hover:shadow-md hover:border-slate-300 transition-all duration-300 hover:-translate-y-1"
+              >
+                <div className="relative w-16 h-16 mb-4 bg-slate-100 rounded-xl group-hover:bg-slate-200 transition-colors overflow-hidden">
+                  {imageSrc ? (
+                    <Image
+                      src={imageSrc}
+                      alt={s.name}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      sizes="(max-width: 768px) 64px, 64px"
+                      onError={(e) => {
+                        // Fallback khi ảnh lỗi
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  ) : (
+                    // Fallback khi không có ảnh
+                    <div className="w-full h-full flex items-center justify-center bg-blue-100">
+                      <span className="text-xl">📦</span>
+                    </div>
+                  )}
+                </div>
+                <p className="text-sm font-medium text-slate-700 group-hover:text-slate-900 transition-colors leading-tight">
+                  {s.name}
+                </p>
+              </Link>
+            );
+          })}
         </div>
         
         {featuredSubcategories.length > initialDisplayCount && (
