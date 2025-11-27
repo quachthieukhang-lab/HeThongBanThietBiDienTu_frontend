@@ -26,9 +26,9 @@ interface Props {
 }
 
 export default function ProductMainInfo({ product, variants }: Props) {
-  const { name, images = [], priceFrom, priceTo, servicePackages = [] } = product;
+  const { name, thumbnail, servicePackages = [] } = product;
   const { addToCart, buyNow } = useCart();
-  const [currentImage, setCurrentImage] = useState<string>(images[0] || "");
+  
   const [selectedServicePackage, setSelectedServicePackage] = useState(
     servicePackages[0] || null
   );
@@ -38,14 +38,24 @@ export default function ProductMainInfo({ product, variants }: Props) {
 
   // Tính tổng giá
   const totalPrice = useMemo(() => {
-    const basePrice = selectedVariant?.price || priceFrom || 0;
+    const basePrice = selectedVariant?.price || 0;
     const servicePrice = selectedServicePackage?.price || 0;
     return basePrice + servicePrice;
-  }, [selectedVariant, selectedServicePackage, priceFrom]);
+  }, [selectedVariant, selectedServicePackage]);
 
-  // Giá hiển thị ban đầu (chỉ sản phẩm)
-  const displayPrice = selectedVariant?.price || priceFrom || 0;
-  const comparePrice = selectedVariant?.compareAtPrice || priceTo;
+  // Giá hiển thị
+  const displayPrice = selectedVariant?.price || 0;
+  const comparePrice = selectedVariant?.compareAtPrice;
+
+  // Format đường dẫn ảnh - GIỐNG NHƯ PRODUCTCARD
+  const formatImageUrl = (img: string) => {
+    if (!img) return null;
+    if (img.startsWith('http')) return img;
+    if (img.startsWith('/')) return `http://localhost:3000${img}`;
+    return `http://localhost:3000/${img}`;
+  };
+
+  const thumbnailUrl = formatImageUrl(thumbnail || "");
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
@@ -60,7 +70,15 @@ export default function ProductMainInfo({ product, variants }: Props) {
               <div className="flex items-start justify-between">
                 <div>
                   <h1 className="text-3xl font-bold text-gray-900 mb-2">{name}</h1>
-                  <div className="flex items-center gap-4">
+                  {/* Hiển thị thông tin variant đang chọn */}
+                  {selectedVariant && (
+                    <div className="mt-2">
+                      <span className="text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
+                        {Object.values(selectedVariant.attributes).join(" / ")}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-4 mt-3">
                     <div className="flex items-center gap-1">
                       <div className="flex text-amber-400">
                         {[...Array(5)].map((_, i) => (
@@ -78,56 +96,27 @@ export default function ProductMainInfo({ product, variants }: Props) {
               </div>
             </div>
 
-            {/* Gallery ảnh */}
+            {/* Gallery ảnh - CHỈ HIỂN THỊ THUMBNAIL GIỐNG PRODUCTCARD */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 p-6">
-                
-                {/* Thumbnail sidebar */}
-                {images.length > 1 && (
-                  <div className="lg:col-span-2 lg:order-first">
-                    <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0">
-                      {images.map((img, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => setCurrentImage(img)}
-                          className={`relative w-16 h-16 rounded-xl border-2 flex-shrink-0 transition-all ${
-                            currentImage === img 
-                              ? "border-blue-500 shadow-md scale-105" 
-                              : "border-gray-200 hover:border-gray-300"
-                          }`}
-                        >
-                          <Image 
-                            src={img} 
-                            alt={`Thumbnail ${idx}`} 
-                            fill 
-                            className="object-cover rounded-lg" 
-                            sizes="64px"
-                          />
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Main image */}
-                <div className={`relative ${images.length > 1 ? 'lg:col-span-10' : 'col-span-full'}`}>
-                  <div className="aspect-[4/3] bg-gray-50 rounded-2xl overflow-hidden">
-                    {currentImage ? (
+              <div className="p-6">
+                <div className="aspect-[4/3] bg-gray-50 rounded-2xl overflow-hidden flex items-center justify-center">
+                  {thumbnailUrl ? (
+                    <div className="relative w-full h-full">
                       <Image 
-                        src={currentImage} 
+                        src={thumbnailUrl} 
                         alt={name} 
-                        fill 
+                        fill
                         className="object-contain transition-transform duration-300 hover:scale-105" 
                         priority
                         sizes="(max-width: 1024px) 100vw, 80vw"
                       />
-                    ) : (
-                      <div className="flex items-center justify-center w-full h-full text-gray-400">
-                        <PhotoIcon className="w-16 h-16 opacity-50" />
-                        <span className="ml-2">Không có hình ảnh</span>
-                      </div>
-                    )}
-                  </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center w-full h-full text-gray-400">
+                      <PhotoIcon className="w-16 h-16 opacity-50" />
+                      <span className="ml-2">Không có hình ảnh</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -165,8 +154,8 @@ export default function ProductMainInfo({ product, variants }: Props) {
               {/* Box giá & mua hàng */}
               <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
                 
-                Giá sản phẩm
                 <div className="mb-6">
+                  <div className="text-sm text-gray-500 mb-2">Giá sản phẩm</div>
                   {comparePrice && comparePrice > displayPrice ? (
                     <div className="space-y-2">
                       <div className="flex items-center gap-3">
@@ -193,14 +182,18 @@ export default function ProductMainInfo({ product, variants }: Props) {
                   <div className="mb-6">
                     <h3 className="text-sm font-semibold text-gray-900 mb-3">Phiên bản:</h3>
                     <div className="grid grid-cols-2 gap-2">
-                      {variants.map((v) => {
-                        const variantLabel = Object.values(v.attributes).join(" / ") || "Mặc định";
+                      {variants.map((variant) => {
+                        const variantLabel = Object.values(variant.attributes).join(" / ") || "Mặc định";
+                        const isSelected = selectedVariant?._id === variant._id;
+                        
                         return (
                           <button
-                            key={v._id}
-                            onClick={() => setSelectedVariant(v)}
+                            key={variant._id}
+                            onClick={() => {
+                              setSelectedVariant(variant);
+                            }}
                             className={`p-3 border-2 rounded-xl text-sm font-medium transition-all ${
-                              selectedVariant?._id === v._id
+                              isSelected
                                 ? "border-blue-500 bg-blue-50 text-blue-700 shadow-sm"
                                 : "border-gray-200 hover:border-gray-300 text-gray-700"
                             }`}
