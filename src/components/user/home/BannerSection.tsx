@@ -3,11 +3,13 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 
 const banners = [
-  "/images/banners/banner1.jpg",
-  "/images/banners/banner2.jpg",
-  "/images/banners/banner3.jpg",
+  "/images/banners/LDP-dien-may-1236x600.png",
+  "/images/banners/LDP-dien-may-1236x700-a.png",
+  "/images/banners/LDP-dien-may-1236x700.png",
 ];
-
+// const banners = [
+//   "/images/banners/baner1.png"
+// ]
 export default function BannerSection() {
   const [current, setCurrent] = useState(0);
 
@@ -20,7 +22,7 @@ export default function BannerSection() {
   }, []);
 
   return (
-    <div className="relative w-full h-[280px] md:h-[300px] overflow-hidden rounded-2xl shadow-lg">
+    <div className="relative w-full h-[350px] md:h-[650px] overflow-hidden rounded-2xl shadow-lg">
       {banners.map((src, i) => (
         <Image
           key={i}
@@ -28,7 +30,7 @@ export default function BannerSection() {
           alt={`banner-${i}`}
           width={1200}
           height={400}
-          className={`absolute top-0 left-0 w-full h-full object-cover transition-opacity duration-700 ease-in-out ${
+          className={`absolute top-0 left-0 w-full h-full transition-opacity duration-700 ease-in-out ${
             i === current ? "opacity-100" : "opacity-0"
           }`}
           priority={i === 0}
