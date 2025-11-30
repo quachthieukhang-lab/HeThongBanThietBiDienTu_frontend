@@ -23,29 +23,29 @@ export default function ChatBox() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
-  const handleSend = async () => {
-    if (!input.trim() || loading) return;
+ const handleSend = async () => {
+  if (!input.trim() || loading) return;
 
-    const text = input.trim();
-    setInput("");
-    setMessages((prev) => [...prev, { sender: "user", text }]);
-    setLoading(true);
+  const text = input.trim();
+  setInput("");
+  setMessages((prev) => [...prev, { sender: "user", text }]);
+  setLoading(true);
 
-    try {
-      const reply = await sendChatMessage(text);
-      setMessages((prev) => [...prev, { sender: "bot", text: reply }]);
-    } catch {
-      setMessages((prev) => [
-        ...prev,
-        { 
-          sender: "bot", 
-          text: "❌ Hiện tại tôi không thể kết nối đến hệ thống. Vui lòng thử lại sau hoặc liên hệ hotline: 1800-1234 để được hỗ trợ." 
-        },
-      ]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  try {
+    const reply = await sendChatMessage(text);
+    setMessages((prev) => [...prev, { sender: "bot", text: reply }]);
+  } catch (error : any) {
+    setMessages((prev) => [
+      ...prev,
+      { 
+        sender: "bot", 
+        text: error.message || "❌ Hiện tại tôi không thể kết nối đến hệ thống. Vui lòng thử lại sau hoặc liên hệ hotline: 1800-1234 để được hỗ trợ." 
+      },
+    ]);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {

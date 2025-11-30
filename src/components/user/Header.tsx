@@ -124,7 +124,7 @@ export function Header() {
                       {subMap[activeCat].map((sub) => (
                         <Link
                           key={sub._id}
-                          href={`/subcategories/${sub.slug}`}
+                          href={`/user/subcategories/${sub.slug}`}
                           className="flex items-center gap-3 p-3 rounded-lg hover:bg-cyan-900/30 transition-all group border border-transparent hover:border-cyan-500/30"
                         >
                           <div className="w-2 h-2 bg-cyan-400 rounded-full flex-shrink-0 shadow-lg shadow-cyan-400/50"></div>
