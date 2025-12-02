@@ -87,49 +87,54 @@ export default function ProductVariantsPage() {
     fetchVariants()
   }, [filters])
 
-
-    const handleCreate = async (data: FormData) => {
+  const handleCreate = async (data: any) => {
     try {
-        const res = await apiFetch(`${backendUrl}/product-variants`, {
+      const res = await apiFetch(`${backendUrl}/product-variants`, {
         method: 'POST',
-        body: data,
-        })
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      })
 
-        if (!res.ok) {
+      if (!res.ok) {
         const error = await res.json()
         throw new Error(error.message || 'Failed to create variant')
-        }
+      }
 
-        toast.success('Tạo biến thể thành công')
-        setModalOpen(false)
-        fetchVariants()
+      toast.success('Tạo biến thể thành công')
+      setModalOpen(false)
+      fetchVariants()
     } catch (err: any) {
-        console.error('Create variant error:', err)
-        toast.error(err?.message || 'Lỗi khi tạo biến thể')
+      console.error('Create variant error:', err)
+      toast.error(err?.message || 'Lỗi khi tạo biến thể')
     }
-    }
+  }
 
-    const handleUpdate = async (id: string, data: FormData) => {
+  const handleUpdate = async (id: string, data: any) => {
     try {
-        const res = await apiFetch(`${backendUrl}/product-variants/${id}`, {
+      const res = await apiFetch(`${backendUrl}/product-variants/${id}`, {
         method: 'PATCH',
-        body: data,
-        })
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      })
 
-        if (!res.ok) {
+      if (!res.ok) {
         const error = await res.json()
         throw new Error(error.message || 'Failed to update variant')
-        }
+      }
 
-        toast.success('Cập nhật biến thể thành công')
-        setModalOpen(false)
-        setEditingVariant(null)
-        fetchVariants()
+      toast.success('Cập nhật biến thể thành công')
+      setModalOpen(false)
+      setEditingVariant(null)
+      fetchVariants()
     } catch (err: any) {
-        console.error('Update variant error:', err)
-        toast.error(err?.message || 'Lỗi khi cập nhật biến thể')
+      console.error('Update variant error:', err)
+      toast.error(err?.message || 'Lỗi khi cập nhật biến thể')
     }
-    }
+  }
 
   const handleToggleActive = async (id: string, isActive: boolean) => {
     try {
