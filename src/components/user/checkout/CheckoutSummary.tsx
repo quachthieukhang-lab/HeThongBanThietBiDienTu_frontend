@@ -1,9 +1,21 @@
 "use client";
 
 import { useCart } from "@/app/user/hooks/useCart";
-import { useState } from "react";
+import { useState , useEffect} from "react";
 import toast from "react-hot-toast";
 import { PaymentMethod } from "./PaymentMethodSelector";
+import PromoCodeInput from "./PromoCodeInput";
+
+export enum DiscountType {
+  PERCENTAGE = "PERCENTAGE",
+  FIXED_AMOUNT = "FIXED_AMOUNT",
+}
+
+interface AppliedPromotion {
+  name: string;
+  discount_type: DiscountType;
+  discount_value: number;
+}
 
 export default function CheckoutSummary({
   userId,
@@ -15,38 +27,33 @@ export default function CheckoutSummary({
   paymentMethod: PaymentMethod;
 }) {
   const { cart } = useCart();
+  const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const shippingFee = 150000;
+  const [discountedTotal, setDiscountedTotal] = useState(subtotal + shippingFee);
+  const [appliedPromotion, setAppliedPromotion] = useState<AppliedPromotion | null>(null);
+
+  useEffect(() => {
+    if (!appliedPromotion) {
+      setDiscountedTotal(subtotal + shippingFee);
+    }
+  }, [cart, subtotal, shippingFee, appliedPromotion]);
 
   if (cart.length === 0)
     return (
-      <div className="bg-white p-6 rounded-lg border text-gray-500">
-        Không có sản phẩm
+      <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-200 text-gray-500 text-center py-12">
+        Không có sản phẩm trong giỏ hàng
       </div>
     );
-
-  const subtotal = cart.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
-  const shippingFee = 150000;
-  const total = subtotal + shippingFee;
 
   const handlePlaceOrder = async () => {
     if (!addressId) {
       toast.error("Vui lòng chọn địa chỉ giao hàng");
       return;
     }
-     
+
     try {
       const token = localStorage.getItem("accessToken");
-        console.log("🚨 DEBUG ORDER CREATION:");
-    console.log({
-  cartItems: cart,
-  addressId,
-  paymentMethod,
-  tokenExists: !!token,
-});
 
-      // 1. Tạo order
       const res = await fetch("http://localhost:3000/orders", {
         method: "POST",
         headers: {
@@ -56,20 +63,12 @@ export default function CheckoutSummary({
         body: JSON.stringify({
           addressId,
           paymentMethod,
+          totalPrice: discountedTotal,
+          promoCode: appliedPromotion?.name || null,
         }),
       });
 
       if (!res.ok) throw new Error("Lỗi đặt hàng");
-
-      const order = await res.json();
-
-      // 2. Giả lập thanh toán online nếu không phải COD
-      if (paymentMethod !== "cod") {
-        // Hiển thị thông tin giả lập
-        toast.success(
-          `Giả lập thanh toán ${paymentMethod === "credit_card" ? "Chuyển khoản/Thẻ" : "PayPal"} thành công`
-        );
-      }
 
       toast.success("Đặt hàng thành công!");
       window.location.href = `/user/orders`;
@@ -80,30 +79,76 @@ export default function CheckoutSummary({
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg border space-y-4">
-      <h2 className="text-xl font-semibold mb-4">Tóm tắt đơn hàng</h2>
+    <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-200 w-full max-w-full min-w-[300px]">
+      <h2 className="text-2xl font-bold text-gray-900 mb-6">Tóm tắt đơn hàng</h2>
 
-      <div className="flex justify-between text-gray-600">
-        <span>Tạm tính</span>
-        <span>{subtotal.toLocaleString("vi-VN")}₫</span>
+      <div className="space-y-4">
+        {/* Tạm tính */}
+        <div className="flex justify-between items-center py-2 border-b border-gray-100">
+          <span className="text-gray-700">Tạm tính</span>
+          <span className="font-medium text-gray-900">{subtotal.toLocaleString("vi-VN")}₫</span>
+        </div>
+
+        {/* Phí vận chuyển */}
+        <div className="flex justify-between items-center py-2 border-b border-gray-100">
+          <span className="text-gray-700">Phí vận chuyển</span>
+          <span className="font-medium text-gray-900">{shippingFee.toLocaleString("vi-VN")}₫</span>
+        </div>
+
+        {/* Mã giảm giá */}
+        <div className="py-4 border-b border-gray-100 w-full">
+          <div className="mb-3 w-full">
+            <span className="text-gray-700 font-medium mb-2 block">Mã giảm giá</span>
+            <PromoCodeInput
+              subtotal={subtotal + shippingFee}
+              setDiscountedTotal={setDiscountedTotal}
+              setAppliedPromotion={setAppliedPromotion}
+            />
+          </div>
+          
+          {appliedPromotion && (
+            <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <span className="text-green-600">✓</span>
+                  <span className="text-sm text-green-800 font-medium">
+                    {appliedPromotion.name}
+                  </span>
+                </div>
+                <span className="text-green-700 font-semibold">
+                  {appliedPromotion.discount_type === DiscountType.PERCENTAGE
+                    ? `-${appliedPromotion.discount_value}%`
+                    : `-${appliedPromotion.discount_value.toLocaleString("vi-VN")}₫`
+                  }
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Tổng cộng */}
+        <div className="flex justify-between items-center py-4">
+          <span className="text-lg font-semibold text-gray-900">Tổng cộng</span>
+          <div className="text-right">
+            {appliedPromotion && subtotal + shippingFee !== discountedTotal && (
+              <div className="text-sm text-gray-500 line-through mb-1">
+                {(subtotal + shippingFee).toLocaleString("vi-VN")}₫
+              </div>
+            )}
+            <div className="text-2xl font-bold text-blue-600">
+              {discountedTotal.toLocaleString("vi-VN")}₫
+            </div>
+          </div>
+        </div>
+
+        {/* Nút đặt hàng */}
+        <button
+          onClick={handlePlaceOrder}
+          className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg hover:shadow-xl"
+        >
+          Đặt hàng
+        </button>
       </div>
-
-      <div className="flex justify-between text-gray-600">
-        <span>Gói dịch vụ đi kèm</span>
-        <span>{shippingFee.toLocaleString("vi-VN")}₫</span>
-      </div>
-
-      <div className="flex justify-between text-lg font-semibold pt-4 border-t">
-        <span>Tổng cộng</span>
-        <span className="text-blue-600">{total.toLocaleString("vi-VN")}₫</span>
-      </div>
-
-      <button
-        onClick={handlePlaceOrder}
-        className="w-full bg-blue-600 text-white py-4 rounded-lg font-semibold hover:bg-blue-700"
-      >
-        Đặt hàng
-      </button>
     </div>
   );
 }
