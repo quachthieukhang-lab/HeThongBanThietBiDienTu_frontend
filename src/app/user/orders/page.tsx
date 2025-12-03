@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useOrders } from "@/app/user/hooks/useOrders";
 import { useRouter } from "next/navigation";
+import ReviewForm from "@/components/user/product/ReviewForm";
 
 export default function OrdersPage() {
   const { orders, fetchOrders, loading } = useOrders();
   const router = useRouter();
+  const [openReview, setOpenReview] = useState<{ productId: string; orderId: string; productName: string } | null>(null);
 
   useEffect(() => {
     fetchOrders();
@@ -63,13 +65,12 @@ export default function OrdersPage() {
         <p className="text-gray-600">Theo dõi và quản lý đơn hàng của bạn</p>
       </div>
 
-      {/* Orders List - 1 dòng 1 đơn */}
+      {/* Orders List */}
       <div className="space-y-4">
         {orders.map((order) => (
           <div
             key={order._id}
-            className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-blue-300 transition-all cursor-pointer group"
-            onClick={() => router.push(`/user/orders/${order._id}`)}
+            className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-blue-300 transition-all"
           >
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
               {/* Order Info */}
@@ -84,7 +85,7 @@ export default function OrdersPage() {
                       <div className="font-semibold text-gray-900 text-lg">{order.code}</div>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-4">
                     <div>
                       <div className="text-gray-500 text-sm">Ngày đặt</div>
@@ -99,20 +100,36 @@ export default function OrdersPage() {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Status Badge */}
                 <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(order.status)}`}>
                   {getStatusText(order.status)}
                 </span>
+
+                {/* Order Items */}
+                <div className="mt-4 space-y-2">
+                  {order.items.map((item) => (
+                    <div key={item.productId} className="flex justify-between items-center p-4 border rounded-lg bg-gray-50">
+                      <div>
+                        <p className="font-medium text-gray-900">{item.name}</p>
+                        <p className="text-sm text-gray-600">{item.quantity} x {item.price.toLocaleString('vi-VN')}₫</p>
+                      </div>
+                      <button
+                        onClick={() => setOpenReview({ productId: item.productId, orderId: order._id, productName: item.name })}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                      >
+                        Viết đánh giá
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               {/* Total Price */}
               <div className="text-right">
                 <span className="text-gray-500 text-sm block">Tổng tiền</span>
                 <p className="text-2xl font-bold text-blue-600">{order.totalPrice.toLocaleString('vi-VN')}₫</p>
-                <p className="text-gray-500 text-sm mt-1 group-hover:text-blue-600 transition-colors">
-                  Xem chi tiết →
-                </p>
+                <p className="text-gray-500 text-sm mt-1">Xem chi tiết →</p>
               </div>
             </div>
           </div>
@@ -128,25 +145,57 @@ export default function OrdersPage() {
             <div className="text-gray-600 text-sm">Tổng đơn</div>
           </div>
           <div className="text-center p-4 bg-white rounded-lg border border-gray-200">
-            <div className="text-2xl font-bold text-green-600 mb-1">
-              {orders.filter(o => o.status === 'completed').length}
-            </div>
+            <div className="text-2xl font-bold text-green-600 mb-1">{orders.filter(o => o.status === 'completed').length}</div>
             <div className="text-gray-600 text-sm">Hoàn thành</div>
           </div>
           <div className="text-center p-4 bg-white rounded-lg border border-gray-200">
-            <div className="text-2xl font-bold text-blue-600 mb-1">
-              {orders.filter(o => o.status === 'shipping').length}
-            </div>
+            <div className="text-2xl font-bold text-blue-600 mb-1">{orders.filter(o => o.status === 'shipping').length}</div>
             <div className="text-gray-600 text-sm">Đang giao</div>
           </div>
           <div className="text-center p-4 bg-white rounded-lg border border-gray-200">
-            <div className="text-2xl font-bold text-yellow-600 mb-1">
-              {orders.filter(o => o.status === 'pending').length}
-            </div>
+            <div className="text-2xl font-bold text-yellow-600 mb-1">{orders.filter(o => o.status === 'pending').length}</div>
             <div className="text-gray-600 text-sm">Chờ xử lý</div>
           </div>
         </div>
       </div>
+
+      {/* Review Form Modal */}
+      {openReview && (
+        <ReviewForm
+          productId={openReview.productId}
+          orderId={openReview.orderId}
+          productName={openReview.productName}
+          onClose={() => setOpenReview(null)}
+          onSubmit={async (review) => {
+            try {
+              const formData = new FormData();
+              formData.append("productId", review.productId);
+              formData.append("orderId", review.orderId);
+              formData.append("rating", review.rating.toString());
+              formData.append("title", review.title || "");
+              formData.append("content", review.content);
+              review.images.forEach(img => formData.append("images", img));
+
+              // Gửi trực tiếp tới BE NestJS
+              const res = await fetch("http://localhost:3000/reviews", { // đổi URL theo BE
+                method: "POST",
+                body: formData,
+                headers: {
+                  Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+                },
+              });
+
+              if (!res.ok) throw new Error("Failed to create review");
+
+              alert("Gửi đánh giá thành công!");
+              setOpenReview(null);
+            } catch (err) {
+              console.error(err);
+              alert("Gửi đánh giá thất bại!");
+            }
+          }}
+        />
+      )}
     </div>
   );
 }
