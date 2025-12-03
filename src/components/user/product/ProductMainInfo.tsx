@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState, useMemo } from "react";
-import type { ProductLite, ProductVariant } from "@/app/user/types/product";
+import type { ProductLite, ProductVariant, ServicePackageLite } from "@/app/user/types/product";
 import { useCart } from "@/app/user/hooks/useCart";
 import {
   StarIcon,
@@ -26,10 +26,14 @@ interface Props {
 }
 
 export default function ProductMainInfo({ product, variants }: Props) {
-  const { name, thumbnail, servicePackages = [] } = product;
+   const servicePackages: ServicePackageLite[] = 
+    Array.isArray(product.servicePackageIds) 
+      ? product.servicePackageIds 
+      : [];
+
   const { addToCart, buyNow } = useCart();
   
-  const [selectedServicePackage, setSelectedServicePackage] = useState(
+   const [selectedServicePackage, setSelectedServicePackage] = useState<ServicePackageLite | null>(
     servicePackages[0] || null
   );
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
@@ -55,7 +59,8 @@ export default function ProductMainInfo({ product, variants }: Props) {
     return `http://localhost:3000/${img}`;
   };
 
-  const thumbnailUrl = formatImageUrl(thumbnail || "");
+  // SỬA: Dùng product.thumbnail thay vì thumbnail
+  const thumbnailUrl = formatImageUrl(product.thumbnail || "");
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
@@ -69,7 +74,8 @@ export default function ProductMainInfo({ product, variants }: Props) {
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">{name}</h1>
+                  {/* SỬA: Dùng product.name thay vì name */}
+                  <h1 className="text-3xl font-bold text-gray-900 mb-2">{product.name}</h1>
                   {/* Hiển thị thông tin variant đang chọn */}
                   {selectedVariant && (
                     <div className="mt-2">
@@ -102,9 +108,10 @@ export default function ProductMainInfo({ product, variants }: Props) {
                 <div className="aspect-[4/3] bg-gray-50 rounded-2xl overflow-hidden flex items-center justify-center">
                   {thumbnailUrl ? (
                     <div className="relative w-full h-full">
+                      {/* SỬA: Dùng product.name cho alt */}
                       <Image 
                         src={thumbnailUrl} 
-                        alt={name} 
+                        alt={product.name} 
                         fill
                         className="object-contain transition-transform duration-300 hover:scale-105" 
                         priority
@@ -258,14 +265,21 @@ export default function ProductMainInfo({ product, variants }: Props) {
                 {/* Action buttons */}
                 <div className="space-y-3">
                   <button
-                    onClick={() => buyNow(product, selectedVariant ?? undefined)}
+                    onClick={() => buyNow(product, selectedVariant ?? undefined, selectedServicePackage ? [selectedServicePackage] : [])}
                     className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 flex items-center justify-center gap-2"
                   >
                     <ShoppingBagIcon className="w-5 h-5" />
                     Mua ngay
                   </button>
                   <button
-                    onClick={() => addToCart(product, selectedVariant ?? undefined)}
+                    onClick={() =>
+                      addToCart(
+                        product,
+                        selectedVariant ?? undefined,
+                        1,
+                        selectedServicePackage ? [selectedServicePackage] : []
+                      )
+                    }
                     className="w-full border-2 border-blue-600 text-blue-600 py-4 rounded-xl font-semibold hover:bg-blue-50 transition-all flex items-center justify-center gap-2"
                   >
                     <PlusIcon className="w-5 h-5" />

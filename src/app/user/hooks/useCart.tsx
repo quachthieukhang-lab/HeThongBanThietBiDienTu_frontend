@@ -75,19 +75,33 @@ export function useCart() {
   // --------------------------
   // 3) ADD TO CART
   // --------------------------
-  const addToCart = async (product: ProductLite, variant?: ProductVariant, quantity = 1) => {
+ const addToCart = async (
+  product: ProductLite,
+  variant?: ProductVariant,
+  quantity = 1,
+  selectedPackages: any[] = []
+) => {
     try {
       const token = localStorage.getItem("accessToken");
 
       const payload: any = {
         productId: product._id,
         quantity,
-        sessionId, // luôn gửi sessionId
-         servicePackages: product.servicePackages || [],
+        sessionId, 
+        
       };
 
       if (variant) payload.variantId = variant._id;
 
+      if (selectedPackages.length > 0) {
+        payload.servicePackages = selectedPackages.map(sp => ({
+          _id: sp._id,
+          name: sp.name,
+          price: sp.price,
+          duration: sp.duration,
+          type: sp.type,
+        }));
+      }
       const res = await fetch(`${API_BASE}/carts/items`, {
         method: "POST",
         headers: {
@@ -115,10 +129,15 @@ export function useCart() {
   // --------------------------
   // 4) BUY NOW
   // --------------------------
-  const buyNow = async (product: ProductLite, variant?: ProductVariant) => {
-    await addToCart(product, variant);
-    window.location.href = "/user/cart";
-  };
+  const buyNow = async (
+  product: ProductLite,
+  variant?: ProductVariant,
+  selectedPackages: any[] = []
+) => {
+  await addToCart(product, variant, 1, selectedPackages);
+  window.location.href = "/user/cart";
+};
+
 
   // --------------------------
   // 5) SET QTY
