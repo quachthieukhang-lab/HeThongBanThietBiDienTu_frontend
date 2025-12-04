@@ -35,7 +35,7 @@ export default function ProductModal({ open, onClose, onCreate, onUpdate, editin
   const [thumbnail, setThumbnail] = useState<File | null>(null)
   const [images, setImages] = useState<FileList | null>(null)
   const [loading, setLoading] = useState(false)
-  const [imagePreviews, setImagePreviews] = useState<{thumbnail?: string, images: string[]}>({ images: [] })
+  const [imagePreviews, setImagePreviews] = useState<{ thumbnail?: string, images: string[] }>({ images: [] })
   const [filteredSubcategories, setFilteredSubcategories] = useState<any[]>([])
 
   useEffect(() => {
@@ -45,18 +45,16 @@ export default function ProductModal({ open, onClose, onCreate, onUpdate, editin
   // Fetch categories, subcategories, brands, service packages
   const fetchData = async () => {
     try {
-      const [categoriesRes, brandsRes, servicePackagesRes] = await Promise.all([
+      const [categoriesRes, servicePackagesRes] = await Promise.all([
         apiFetch(`${backendUrl}/categories`),
-        apiFetch(`${backendUrl}/brands`),
         apiFetch(`${backendUrl}/service-packages`)
       ])
 
-      if (!categoriesRes.ok || !brandsRes.ok || !servicePackagesRes.ok) {
+      if (!categoriesRes.ok || !servicePackagesRes.ok) {
         throw new Error('Failed to fetch data')
       }
 
       const categoriesData = await categoriesRes.json()
-      const brandsData = await brandsRes.json()
       const servicePackagesData = await servicePackagesRes.json()
 
       // Xử lý nhiều trường hợp cấu trúc response
@@ -68,7 +66,6 @@ export default function ProductModal({ open, onClose, onCreate, onUpdate, editin
       }
 
       const categoriesItems = getItems(categoriesData)
-      const brandsItems = getItems(brandsData)
       const servicePackagesItems = getItems(servicePackagesData)
 
       // Fetch ALL subcategories pages
@@ -81,12 +78,12 @@ export default function ProductModal({ open, onClose, onCreate, onUpdate, editin
         if (!subcategoriesRes.ok) {
           throw new Error('Failed to fetch subcategories')
         }
-        
+
         const subcategoriesData = await subcategoriesRes.json()
         const subcategoriesItems = getItems(subcategoriesData)
-        
+
         allSubcategories = [...allSubcategories, ...subcategoriesItems]
-        
+
         // Xác định tổng số trang
         if (subcategoriesData.pages) {
           totalPages = subcategoriesData.pages
@@ -96,13 +93,42 @@ export default function ProductModal({ open, onClose, onCreate, onUpdate, editin
           // Nếu không có thông tin phân trang, chỉ lấy trang đầu
           totalPages = 1
         }
-        
+
+        currentPage++
+      } while (currentPage <= totalPages)
+
+      // Fetch ALL brands pages
+      let allBrands: any[] = []
+      currentPage = 1
+      totalPages = 1
+
+      do {
+        const brandsRes = await apiFetch(`${backendUrl}/brands?page=${currentPage}&limit=100`)
+        if (!brandsRes.ok) {
+          throw new Error('Failed to fetch brands')
+        }
+
+        const brandsData = await brandsRes.json()
+        const brandsItems = getItems(brandsData)
+
+        allBrands = [...allBrands, ...brandsItems]
+
+        // Xác định tổng số trang
+        if (brandsData.pages) {
+          totalPages = brandsData.pages
+        } else if (brandsData.total && brandsData.limit) {
+          totalPages = Math.ceil(brandsData.total / brandsData.limit)
+        } else {
+          // Nếu không có thông tin phân trang, chỉ lấy trang đầu
+          totalPages = 1
+        }
+
         currentPage++
       } while (currentPage <= totalPages)
 
       console.log('Total categories:', categoriesItems.length)
       console.log('Total subcategories:', allSubcategories.length)
-      console.log('Total brands:', brandsItems.length)
+      console.log('Total brands:', allBrands.length)
       console.log('Total service packages:', servicePackagesItems.length)
 
       // Log để debug xem mỗi danh mục có bao nhiêu subcategories
@@ -110,7 +136,7 @@ export default function ProductModal({ open, onClose, onCreate, onUpdate, editin
         const subcatsForCategory = allSubcategories.filter(s => {
           if (!s.categoryId) return false
           let subcatCategoryId
-          
+
           if (typeof s.categoryId === 'object' && s.categoryId !== null && s.categoryId._id) {
             subcatCategoryId = s.categoryId._id
           } else if (typeof s.categoryId === 'string') {
@@ -120,18 +146,18 @@ export default function ProductModal({ open, onClose, onCreate, onUpdate, editin
           } else {
             return false
           }
-          
+
           return String(subcatCategoryId) === String(category._id)
         })
-        
+
         console.log(`Category "${category.name}" has ${subcatsForCategory.length} subcategories`)
       })
 
       setCategories(categoriesItems)
       setSubcategories(allSubcategories)
-      setBrands(brandsItems)
+      setBrands(allBrands)
       setServicePackages(servicePackagesItems)
-      
+
     } catch (err: any) {
       console.error('Fetch data error:', err)
       toast.error(err?.message || 'Lỗi khi tải dữ liệu danh mục')
@@ -147,10 +173,10 @@ export default function ProductModal({ open, onClose, onCreate, onUpdate, editin
     if (form.categoryId) {
       const filtered = subcategories.filter(s => {
         if (!s.categoryId) return false
-        
+
         // Xử lý tất cả các trường hợp categoryId
         let subcatCategoryId
-        
+
         // Trường hợp 1: categoryId là object đầy đủ (populated data)
         if (typeof s.categoryId === 'object' && s.categoryId !== null && s.categoryId._id) {
           subcatCategoryId = s.categoryId._id
@@ -166,14 +192,14 @@ export default function ProductModal({ open, onClose, onCreate, onUpdate, editin
         else {
           return false
         }
-        
+
         return String(subcatCategoryId) === String(form.categoryId)
       })
-      
+
       console.log('Selected categoryId:', form.categoryId)
       console.log('Filtered subcategories:', filtered)
       setFilteredSubcategories(filtered)
-      
+
       // Reset subcategoryId nếu danh mục con hiện tại không thuộc danh mục mới
       if (form.subcategoryId && !filtered.some(s => s._id === form.subcategoryId)) {
         setForm(prev => ({ ...prev, subcategoryId: '' }))
@@ -247,7 +273,7 @@ export default function ProductModal({ open, onClose, onCreate, onUpdate, editin
         priceTo: editing.priceTo || 0,
         specs: editing.specs || {},
       })
-      
+
       // Tạo preview cho ảnh hiện tại
       setImagePreviews({
         thumbnail: editing.thumbnail,
@@ -275,7 +301,7 @@ export default function ProductModal({ open, onClose, onCreate, onUpdate, editin
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null
     setThumbnail(file)
-    
+
     if (file) {
       const reader = new FileReader()
       reader.onload = (e) => {
@@ -291,11 +317,11 @@ export default function ProductModal({ open, onClose, onCreate, onUpdate, editin
   const handleImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
     setImages(files)
-    
+
     if (files && files.length > 0) {
       const newPreviews: string[] = []
       const fileArray = Array.from(files)
-      
+
       fileArray.forEach((file, index) => {
         const reader = new FileReader()
         reader.onload = (e) => {
@@ -380,7 +406,7 @@ export default function ProductModal({ open, onClose, onCreate, onUpdate, editin
     setLoading(true);
     try {
       const data = new FormData();
-      
+
       data.append('name', form.name.trim());
       data.append('slug', form.slug?.trim() || form.name.trim());
       data.append('categoryId', form.categoryId);
@@ -388,14 +414,9 @@ export default function ProductModal({ open, onClose, onCreate, onUpdate, editin
       data.append('isPublished', String(form.isPublished));
       data.append('priceFrom', String(form.priceFrom || 0));
       data.append('priceTo', String(form.priceTo || 0));
-      
-      // Thêm servicePackageIds nếu có
-      if (form.servicePackageIds && form.servicePackageIds.length > 0) {
-        form.servicePackageIds.forEach((id: string) => {
-          data.append('servicePackageIds', id);
-        });
-      }
-      
+
+      // KHÔNG gửi servicePackageIds ở đây - sẽ gọi endpoint riêng
+
       if (form.brandId && form.brandId.trim() !== '') {
         data.append('brandId', form.brandId);
       }
@@ -417,6 +438,28 @@ export default function ProductModal({ open, onClose, onCreate, onUpdate, editin
 
       if (editing) {
         await onUpdate(editing._id, data);
+
+        try {
+          const response = await apiFetch(`${backendUrl}/products/${editing._id}/service-packages`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              servicePackageIds: form.servicePackageIds || []
+            }),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to update service packages');
+          }
+
+          toast.success('Đã cập nhật service packages');
+        } catch (pkgError: any) {
+          console.error('Failed to update service packages:', pkgError);
+          toast.error('Cập nhật product thành công nhưng có lỗi với service packages: ' + (pkgError.message || ''));
+        }
       } else {
         await onCreate(data);
       }
@@ -451,7 +494,7 @@ export default function ProductModal({ open, onClose, onCreate, onUpdate, editin
           if (actualIndex !== index) dt.items.add(file)
         })
         setImages(dt.files.length > 0 ? dt.files : null)
-        
+
         // Cập nhật preview
         const updatedPreviews = imagePreviews.images.filter((_, i) => i !== index)
         setImagePreviews(prev => ({ ...prev, images: updatedPreviews }))
@@ -678,7 +721,7 @@ export default function ProductModal({ open, onClose, onCreate, onUpdate, editin
                   </button>
                 )}
               </div>
-              
+
               {imagePreviews.images.length > 0 && (
                 <div className="mb-3">
                   <p className="text-xs text-gray-500 mb-2">Previews ({imagePreviews.images.length} ảnh):</p>
@@ -705,7 +748,7 @@ export default function ProductModal({ open, onClose, onCreate, onUpdate, editin
                   </div>
                 </div>
               )}
-              
+
               <input
                 id="images-input"
                 type="file"
