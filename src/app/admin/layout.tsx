@@ -44,7 +44,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   
   const links = [
     { label: 'Trang Chủ', href: '/admin/dashboard', icon: <LayoutDashboard size={18} /> },
-    { label: 'Báo Cáo Thống Kê', href: '/admin/reports', icon: <BarChart3 size={18} /> },
+    // { label: 'Báo Cáo Thống Kê', href: '/admin/reports', icon: <BarChart3 size={18} /> },
     { label: 'Người Dùng', href: '/admin/users', icon: <Users size={18} /> },
     {
       label: 'Danh Mục Sản Phẩm', href: '/admin/categories', icon: <Boxes size={18} />, sub: [
@@ -74,7 +74,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
           <nav className="space-y-2">
             <p className="text-xs uppercase tracking-wider text-white/70 mb-3">Tổng Quan</p>
-            {links.slice(0, 2).map(link => (
+            {links.slice(0, 1).map(link => (
               <Link key={link.href} href={link.href}>
                 <div
                   className={`flex items-center gap-3 px-4 py-2 rounded-lg cursor-pointer transition ${pathname === link.href ? 'bg-white/20 font-semibold' : 'hover:bg-white/10'
@@ -88,7 +88,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
             <p className="text-xs uppercase tracking-wider text-white/70 mt-6 mb-3">Quản Lý</p>
 
-            {links.slice(2).map(link => (
+            {links.slice(1).map(link => (
               <div key={link.href}>
                 {/* Nếu có submenu */}
                 {link.sub ? (

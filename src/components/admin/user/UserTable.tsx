@@ -2,9 +2,15 @@
 
 import React from 'react'
 import * as ScrollArea from '@radix-ui/react-scroll-area'
-import { Pencil, Trash2, RotateCcw } from 'lucide-react'
+import { Pencil, Trash2, RotateCcw, Ban, ShieldOff } from 'lucide-react'
 
-export default function UserTable({ users, onEdit, onDelete, onRestore }: any) {
+export default function UserTable({ 
+  users, 
+  onEdit, 
+  onDelete, 
+  onRestore, 
+  onHardDelete 
+}: any) {
   return (
     <div className="w-full rounded-2xl shadow-xl border border-gray-200 bg-white overflow-hidden">
       <ScrollArea.Root className="w-full h-[600px] rounded-b-2xl">
@@ -53,6 +59,10 @@ export default function UserTable({ users, onEdit, onDelete, onRestore }: any) {
                               ? 'bg-blue-100 text-blue-700'
                               : r === 'customer'
                               ? 'bg-green-100 text-green-700'
+                              : r === 'staff'
+                              ? 'bg-purple-100 text-purple-700'
+                              : r === 'guest'
+                              ? 'bg-gray-100 text-gray-700'
                               : 'bg-gray-100 text-gray-700'
                           }`}
                         >
@@ -68,9 +78,9 @@ export default function UserTable({ users, onEdit, onDelete, onRestore }: any) {
                           u.status === 'active'
                             ? 'bg-green-100 text-green-700'
                             : u.status === 'blocked'
-                            ? 'bg-yellow-100 text-yellow-700'
-                            : u.status === 'deleted'
                             ? 'bg-red-100 text-red-700'
+                            : u.status === 'deleted'
+                            ? 'bg-gray-100 text-gray-700'
                             : 'bg-gray-100 text-gray-700'
                         }`}
                       >
@@ -80,7 +90,7 @@ export default function UserTable({ users, onEdit, onDelete, onRestore }: any) {
 
                     {/* Hành động */}
                     <td className="px-5 py-3 text-center">
-                      <div className="flex justify-center gap-3">
+                      <div className="flex justify-center gap-2">
                         {u.status !== 'deleted' ? (
                           <>
                             <button
@@ -90,22 +100,41 @@ export default function UserTable({ users, onEdit, onDelete, onRestore }: any) {
                             >
                               <Pencil size={18} />
                             </button>
+                            
                             <button
-                              title="Xóa"
+                              title="Vô hiệu hóa"
                               onClick={() => onDelete(u._id)}
+                              className="p-2 rounded-md text-amber-600 hover:bg-amber-100 hover:scale-110 transition"
+                            >
+                              <Ban size={18} />
+                            </button>
+                            
+                            <button
+                              title="Xóa vĩnh viễn"
+                              onClick={() => onHardDelete(u._id)}
                               className="p-2 rounded-md text-red-600 hover:bg-red-100 hover:scale-110 transition"
                             >
                               <Trash2 size={18} />
                             </button>
                           </>
                         ) : (
-                          <button
-                            title="Khôi phục"
-                            onClick={() => onRestore(u._id)}
-                            className="p-2 rounded-md text-green-600 hover:bg-green-100 hover:scale-110 transition"
-                          >
-                            <RotateCcw size={18} />
-                          </button>
+                          <>
+                            <button
+                              title="Khôi phục"
+                              onClick={() => onRestore(u._id)}
+                              className="p-2 rounded-md text-green-600 hover:bg-green-100 hover:scale-110 transition"
+                            >
+                              <RotateCcw size={18} />
+                            </button>
+                            
+                            <button
+                              title="Xóa vĩnh viễn"
+                              onClick={() => onHardDelete(u._id)}
+                              className="p-2 rounded-md text-red-600 hover:bg-red-100 hover:scale-110 transition"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </>
                         )}
                       </div>
                     </td>
@@ -125,7 +154,6 @@ export default function UserTable({ users, onEdit, onDelete, onRestore }: any) {
           </table>
         </ScrollArea.Viewport>
 
-        {/* Thanh cuộn tùy chỉnh */}
         <ScrollArea.Scrollbar
           className="flex select-none touch-none p-0.5 bg-gray-100 transition hover:bg-gray-200"
           orientation="vertical"

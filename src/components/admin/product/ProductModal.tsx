@@ -26,10 +26,12 @@ export default function ProductModal({ open, onClose, onCreate, onUpdate, editin
     specs: {},
     priceFrom: 0,
     priceTo: 0,
+    servicePackageIds: [],
   })
   const [categories, setCategories] = useState<any[]>([])
   const [subcategories, setSubcategories] = useState<any[]>([])
   const [brands, setBrands] = useState<any[]>([])
+  const [servicePackages, setServicePackages] = useState<any[]>([])
   const [thumbnail, setThumbnail] = useState<File | null>(null)
   const [images, setImages] = useState<FileList | null>(null)
   const [loading, setLoading] = useState(false)
@@ -40,20 +42,22 @@ export default function ProductModal({ open, onClose, onCreate, onUpdate, editin
     console.log('form changed:', form)
   }, [form])
 
-  // Fetch categories, subcategories, brands
+  // Fetch categories, subcategories, brands, service packages
   const fetchData = async () => {
     try {
-      const [categoriesRes, brandsRes] = await Promise.all([
+      const [categoriesRes, brandsRes, servicePackagesRes] = await Promise.all([
         apiFetch(`${backendUrl}/categories`),
-        apiFetch(`${backendUrl}/brands`)
+        apiFetch(`${backendUrl}/brands`),
+        apiFetch(`${backendUrl}/service-packages`)
       ])
 
-      if (!categoriesRes.ok || !brandsRes.ok) {
+      if (!categoriesRes.ok || !brandsRes.ok || !servicePackagesRes.ok) {
         throw new Error('Failed to fetch data')
       }
 
       const categoriesData = await categoriesRes.json()
       const brandsData = await brandsRes.json()
+      const servicePackagesData = await servicePackagesRes.json()
 
       // Xử lý nhiều trường hợp cấu trúc response
       const getItems = (data: any) => {
@@ -65,6 +69,7 @@ export default function ProductModal({ open, onClose, onCreate, onUpdate, editin
 
       const categoriesItems = getItems(categoriesData)
       const brandsItems = getItems(brandsData)
+      const servicePackagesItems = getItems(servicePackagesData)
 
       // Fetch ALL subcategories pages
       let allSubcategories: any[] = []
@@ -98,6 +103,7 @@ export default function ProductModal({ open, onClose, onCreate, onUpdate, editin
       console.log('Total categories:', categoriesItems.length)
       console.log('Total subcategories:', allSubcategories.length)
       console.log('Total brands:', brandsItems.length)
+      console.log('Total service packages:', servicePackagesItems.length)
 
       // Log để debug xem mỗi danh mục có bao nhiêu subcategories
       categoriesItems.forEach((category: any) => {
@@ -124,6 +130,7 @@ export default function ProductModal({ open, onClose, onCreate, onUpdate, editin
       setCategories(categoriesItems)
       setSubcategories(allSubcategories)
       setBrands(brandsItems)
+      setServicePackages(servicePackagesItems)
       
     } catch (err: any) {
       console.error('Fetch data error:', err)
@@ -216,12 +223,25 @@ export default function ProductModal({ open, onClose, onCreate, onUpdate, editin
         }
       }
 
+      // Xử lý servicePackageIds từ dữ liệu editing
+      let editingServicePackageIds: string[] = []
+      if (editing.servicePackageIds && Array.isArray(editing.servicePackageIds)) {
+        editingServicePackageIds = editing.servicePackageIds.map((pkg: any) => {
+          if (typeof pkg === 'object' && pkg !== null) {
+            if (pkg.$oid) return pkg.$oid
+            if (pkg._id) return pkg._id
+          }
+          return String(pkg)
+        })
+      }
+
       setForm({
         name: editing.name || '',
         slug: editing.slug || '',
         categoryId: editingCategoryId,
         subcategoryId: editingSubcategoryId,
         brandId: editingBrandId,
+        servicePackageIds: editingServicePackageIds,
         isPublished: editing.isPublished !== undefined ? editing.isPublished : true,
         priceFrom: editing.priceFrom || 0,
         priceTo: editing.priceTo || 0,
@@ -240,6 +260,7 @@ export default function ProductModal({ open, onClose, onCreate, onUpdate, editin
         categoryId: '',
         subcategoryId: '',
         brandId: '',
+        servicePackageIds: [],
         isPublished: true,
         priceFrom: 0,
         priceTo: 0,
@@ -297,6 +318,23 @@ export default function ProductModal({ open, onClose, onCreate, onUpdate, editin
     }
   }
 
+  const handleServicePackageChange = (servicePackageId: string) => {
+    setForm((prev: any) => {
+      const isSelected = prev.servicePackageIds.includes(servicePackageId)
+      if (isSelected) {
+        return {
+          ...prev,
+          servicePackageIds: prev.servicePackageIds.filter((id: string) => id !== servicePackageId)
+        }
+      } else {
+        return {
+          ...prev,
+          servicePackageIds: [...prev.servicePackageIds, servicePackageId]
+        }
+      }
+    })
+  }
+
   const handleSubmit = async () => {
     if (!form.name || !form.categoryId || !form.subcategoryId) {
       toast.error('Vui lòng điền đủ tên, danh mục và danh mục con')
@@ -350,6 +388,13 @@ export default function ProductModal({ open, onClose, onCreate, onUpdate, editin
       data.append('isPublished', String(form.isPublished));
       data.append('priceFrom', String(form.priceFrom || 0));
       data.append('priceTo', String(form.priceTo || 0));
+      
+      // Thêm servicePackageIds nếu có
+      if (form.servicePackageIds && form.servicePackageIds.length > 0) {
+        form.servicePackageIds.forEach((id: string) => {
+          data.append('servicePackageIds', id);
+        });
+      }
       
       if (form.brandId && form.brandId.trim() !== '') {
         data.append('brandId', form.brandId);
@@ -518,6 +563,36 @@ export default function ProductModal({ open, onClose, onCreate, onUpdate, editin
                   <option key={b._id} value={b._id}>{b.name}</option>
                 ))}
               </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Service Packages</label>
+              <div className="border rounded p-3 max-h-40 overflow-y-auto">
+                {servicePackages.length === 0 ? (
+                  <p className="text-sm text-gray-500">Không có service package nào</p>
+                ) : (
+                  <div className="space-y-2">
+                    {servicePackages.map((pkg) => (
+                      <div key={pkg._id} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id={`service-package-${pkg._id}`}
+                          checked={form.servicePackageIds.includes(pkg._id)}
+                          onChange={() => handleServicePackageChange(pkg._id)}
+                          className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
+                        />
+                        <label
+                          htmlFor={`service-package-${pkg._id}`}
+                          className="ml-2 text-sm cursor-pointer hover:text-indigo-700"
+                        >
+                          {pkg.name} {pkg.price ? `($${pkg.price})` : ''}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Chọn các service packages áp dụng cho sản phẩm này</p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
