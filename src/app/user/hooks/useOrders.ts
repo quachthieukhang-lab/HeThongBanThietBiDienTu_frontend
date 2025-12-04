@@ -1,5 +1,5 @@
 "use client";
-
+import { ServicePackageLite } from "@/app/user/types/product";
 import { useState, useEffect, useCallback } from "react";
 
 export interface OrderItem {
@@ -10,6 +10,7 @@ export interface OrderItem {
   quantity: number;
   thumbnail?: string;
   facets?: any[];
+  servicePackages?: ServicePackageLite[]; 
 }
 
 export interface Order {

@@ -1,6 +1,6 @@
 import type { Category, Subcategory } from "./category";
 
-interface ServicePackageLite {
+export interface ServicePackageLite {
   _id: string;
   name: string;
   price: number;
@@ -14,7 +14,7 @@ export interface Product {
   slug: string;
   categoryId: string; 
   subcategoryId: string; 
-  brandId?: string;
+  brandId?: string | { _id: string; name: string; logo?: string }; // Có thể là object khi populated
   specs?: Record<string, any>;
   templateId: string;
   templateVersion: number;
@@ -25,16 +25,19 @@ export interface Product {
   priceTo: number;
   facets?: Record<string, any>;
   variantFacetSummary?: Record<string, any>;
-  servicePackages?: ServicePackageLite[];
+  // THAY ĐỔI: servicePackages thành servicePackageIds
+  servicePackageIds?: ServicePackageLite[] | string[]; // Có thể là mảng object (populated) hoặc string IDs
   createdAt?: string;
   updatedAt?: string;
 }
 
-// Dành cho hiển thị danh sách sản phẩm (tối giản)
+// Dành cho hiển thị danh sách sản phẩm
 export type ProductLite = Pick<
   Product,
-  "_id" | "name" | "slug" | "thumbnail" | "priceFrom" | "priceTo" | "images" | "categoryId" | "subcategoryId" | "brandId" | "servicePackages"
+  "_id" | "name" | "slug" | "thumbnail" | "priceFrom" | "priceTo" | 
+  "images" | "categoryId" | "subcategoryId" | "brandId" | "servicePackageIds" // SỬA: servicePackageIds
 > & { rating?: number };
+
 
 // Chi tiết variant
 export interface ProductVariant {

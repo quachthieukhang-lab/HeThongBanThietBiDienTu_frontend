@@ -71,6 +71,7 @@ export default function OrdersPage() {
           <div
             key={order._id}
             className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-blue-300 transition-all"
+             onClick={() => router.push(`/user/orders/${order._id}`)}
           >
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
               {/* Order Info */}

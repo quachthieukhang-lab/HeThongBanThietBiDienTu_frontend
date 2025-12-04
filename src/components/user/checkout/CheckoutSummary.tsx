@@ -17,6 +17,12 @@ interface AppliedPromotion {
   discount_value: number;
 }
 
+interface CartData {
+  items: any[];
+  totalPrice: number;
+  totalQuantity: number;
+}
+
 export default function CheckoutSummary({
   userId,
   addressId,
@@ -26,9 +32,37 @@ export default function CheckoutSummary({
   addressId: string | null;
   paymentMethod: PaymentMethod;
 }) {
-  const { cart } = useCart();
-  const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shippingFee = 150000;
+  const { cart, fetchCart } = useCart();
+  const [cartData, setCartData] = useState<CartData | null>(null);
+  const shippingFee = 30000;
+  
+  // Lấy cart data từ API (có totalPrice đã tính từ BE)
+  useEffect(() => {
+    const fetchCartData = async () => {
+      const token = localStorage.getItem("accessToken");
+      const sid = sessionStorage.getItem("cartSessionId");
+      
+      if (!token || !sid) return;
+      
+      try {
+        const res = await fetch(
+          `http://localhost:3000/carts/me?sessionId=${sid}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        const data = await res.json();
+        setCartData(data);
+      } catch (error) {
+        console.error("Error fetching cart data:", error);
+      }
+    };
+    
+    fetchCartData();
+  }, [cart]); // Khi cart thay đổi
+
+  // Sử dụng totalPrice từ BE
+  const subtotal = cartData?.totalPrice || 0;
   const [discountedTotal, setDiscountedTotal] = useState(subtotal + shippingFee);
   const [appliedPromotion, setAppliedPromotion] = useState<AppliedPromotion | null>(null);
 
@@ -36,9 +70,9 @@ export default function CheckoutSummary({
     if (!appliedPromotion) {
       setDiscountedTotal(subtotal + shippingFee);
     }
-  }, [cart, subtotal, shippingFee, appliedPromotion]);
+  }, [subtotal, shippingFee, appliedPromotion]);
 
-  if (cart.length === 0)
+  if (!cartData || cart.length === 0)
     return (
       <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-200 text-gray-500 text-center py-12">
         Không có sản phẩm trong giỏ hàng
@@ -54,6 +88,7 @@ export default function CheckoutSummary({
     try {
       const token = localStorage.getItem("accessToken");
 
+      // Gửi lên BE để BE tự tính toán lại
       const res = await fetch("http://localhost:3000/orders", {
         method: "POST",
         headers: {
@@ -63,7 +98,7 @@ export default function CheckoutSummary({
         body: JSON.stringify({
           addressId,
           paymentMethod,
-          totalPrice: discountedTotal,
+          // KHÔNG gửi totalPrice nữa, để BE tự tính
           promoCode: appliedPromotion?.name || null,
         }),
       });
@@ -78,6 +113,7 @@ export default function CheckoutSummary({
     }
   };
 
+  // ... phần JSX giữ nguyên
   return (
     <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-200 w-full max-w-full min-w-[300px]">
       <h2 className="text-2xl font-bold text-gray-900 mb-6">Tóm tắt đơn hàng</h2>

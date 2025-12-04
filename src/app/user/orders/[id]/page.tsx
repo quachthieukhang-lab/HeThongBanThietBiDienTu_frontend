@@ -125,6 +125,20 @@ export default function OrderDetailPage() {
                           ))}
                         </div>
                       )}
+                      {/* Service Packages - HIỂN THỊ ĐƠN GIẢN */}
+                      {item.servicePackages && item.servicePackages.length > 0 && (
+                        <div className="mt-2 mb-2">
+                          <p className="text-sm font-medium text-gray-700 mb-1">Gói dịch vụ:</p>
+                          <div className="space-y-1">
+                            {item.servicePackages.map((sp: any) => (
+                              <div key={sp._id} className="flex justify-between items-center text-sm">
+                                <span className="text-gray-600">• {sp.name}</span>
+                                <span className="font-medium text-blue-600">+{sp.price.toLocaleString('vi-VN')}₫</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                     <div className="text-right min-w-[120px]">
                       <div className="text-gray-500 text-sm mb-1">Số lượng</div>
