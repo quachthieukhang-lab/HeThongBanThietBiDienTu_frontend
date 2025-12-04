@@ -1,6 +1,6 @@
 'use client'
 
-import React, { ReactNode, useState } from 'react'
+import React, { ReactNode, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { Avatar, AvatarFallback } from '@radix-ui/react-avatar'
@@ -12,13 +12,28 @@ interface AdminLayoutProps {
   children: ReactNode
 }
 
+interface User {
+  name: string;
+  email: string;
+  
+  // Bạn có thể thêm các thuộc tính khác ở đây
+}
+
 // Define the fetcher function for the logout mutation
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname()
   const router = useRouter()
   const [openCategoryMenu, setOpenCategoryMenu] = useState(false)
-
+  const [user, setUser] = useState<User | null>(() => {
+    const userInfoString = localStorage.getItem("userInfo");
+    if (userInfoString) {
+      try {
+        return JSON.parse(userInfoString) as User;
+      } catch (e) { console.error("Failed to parse user info", e); return null }
+    }
+    return null;
+  })
   const handleLogout = async () => {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
@@ -26,14 +41,16 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     localStorage.removeItem("userRole");
     router.push("/auth/login"); // Thay thế bằng router.push
   }
+  
   const links = [
     { label: 'Trang Chủ', href: '/admin/dashboard', icon: <LayoutDashboard size={18} /> },
     { label: 'Báo Cáo Thống Kê', href: '/admin/reports', icon: <BarChart3 size={18} /> },
     { label: 'Người Dùng', href: '/admin/users', icon: <Users size={18} /> },
-    { label: 'Danh Mục Sản Phẩm', href: '/admin/categories', icon: <Boxes size={18} />, sub: [
-      { label: 'Danh mục chính', href: '/admin/categories' },
-      { label: 'Danh mục con', href: '/admin/subcategories' },
-    ]
+    {
+      label: 'Danh Mục Sản Phẩm', href: '/admin/categories', icon: <Boxes size={18} />, sub: [
+        { label: 'Danh mục chính', href: '/admin/categories' },
+        { label: 'Danh mục con', href: '/admin/subcategories' },
+      ]
     },
     { label: 'Mẫu Thuộc Tính', href: '/admin/attribute-templates', icon: <Tag size={18} /> },
     { label: 'Sản Phẩm', href: '/admin/products', icon: <Package size={18} /> },
@@ -44,7 +61,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { label: 'Đánh Giá', href: '/admin/reviews', icon: <Star size={18} /> },
     { label: 'Khuyến Mãi', href: '/admin/promotions', icon: <Gift size={18} /> },
   ]
-
+  useEffect(() => {
+    console.log(user)
+  },[])
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Toaster position="top-right" />
@@ -58,9 +77,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             {links.slice(0, 2).map(link => (
               <Link key={link.href} href={link.href}>
                 <div
-                  className={`flex items-center gap-3 px-4 py-2 rounded-lg cursor-pointer transition ${
-                    pathname === link.href ? 'bg-white/20 font-semibold' : 'hover:bg-white/10'
-                  }`}
+                  className={`flex items-center gap-3 px-4 py-2 rounded-lg cursor-pointer transition ${pathname === link.href ? 'bg-white/20 font-semibold' : 'hover:bg-white/10'
+                    }`}
                 >
                   {link.icon}
                   <span>{link.label}</span>
@@ -77,12 +95,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                   <>
                     <div
                       onClick={() => setOpenCategoryMenu(p => !p)}
-                      className={`flex items-center justify-between px-4 py-2 rounded-lg cursor-pointer transition ${
-                        pathname.startsWith('/admin/categories') ||
-                        pathname.startsWith('/admin/subcategories')
+                      className={`flex items-center justify-between px-4 py-2 rounded-lg cursor-pointer transition ${pathname.startsWith('/admin/categories') ||
+                          pathname.startsWith('/admin/subcategories')
                           ? 'bg-white/20 font-semibold'
                           : 'hover:bg-white/10'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center gap-3">
                         {link.icon}
@@ -96,11 +113,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                         {link.sub.map(sub => (
                           <Link key={sub.href} href={sub.href}>
                             <div
-                              className={`px-3 py-1.5 rounded-lg text-sm transition ${
-                                pathname === sub.href
+                              className={`px-3 py-1.5 rounded-lg text-sm transition ${pathname === sub.href
                                   ? 'bg-white/20 font-semibold'
                                   : 'hover:bg-white/10'
-                              }`}
+                                }`}
                             >
                               {sub.label}
                             </div>
@@ -112,9 +128,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 ) : (
                   <Link href={link.href}>
                     <div
-                      className={`flex items-center gap-3 px-4 py-2 rounded-lg cursor-pointer transition ${
-                        pathname === link.href ? 'bg-white/20 font-semibold' : 'hover:bg-white/10'
-                      }`}
+                      className={`flex items-center gap-3 px-4 py-2 rounded-lg cursor-pointer transition ${pathname === link.href ? 'bg-white/20 font-semibold' : 'hover:bg-white/10'
+                        }`}
                     >
                       {link.icon}
                       <span>{link.label}</span>
@@ -131,8 +146,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 <AvatarFallback>NH</AvatarFallback>
               </Avatar>
               <div>
-                <p className="text-sm font-medium">Ngô Nhựt Hào</p>
-                <p className="text-xs text-gray-200">nnhao@gmail.com</p>
+                <p className="text-sm font-medium">{user?.name ?? 'Admin'}</p>
+                <p className="text-xs text-gray-200">{user?.email}</p>
               </div>
             </div>
             <button onClick={handleLogout} className="mt-4 w-full text-left text-sm text-gray-200 hover:text-white transition">
