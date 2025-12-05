@@ -5,9 +5,9 @@ import { apiFetch } from '@/lib/api';
 import toast, { Toaster } from 'react-hot-toast';
 import { PlusCircle, Search } from 'lucide-react';
 import PromotionTable from '@/components/admin/promotion/PromotionTable';
-import PromotionModal from '@/components/admin/promotion/PromotionModal';
+import PromotionModal, { PromotionFormData } from '@/components/admin/promotion/PromotionModal';
 import DeleteConfirmationModal from '@/components/admin/promotion/DeleteConfirmationModal';
-import { toZonedTime, format as formatTz } from 'date-fns-tz';
+import dayjs from 'dayjs'; // Import dayjs
 
 export enum DiscountType {
   Percentage = 'percentage',
@@ -21,9 +21,10 @@ export type Promotion = {
   discount_type: DiscountType;
   code: string;
   discount_value: number;
-  start_date: Date; // Use string for date to simplify state management
+  discount_amount: number; // Thêm lại trường này
+  start_date: Date;
   end_date: Date;
-  isActive: boolean;
+  status: boolean; // Đổi tên từ isActive
 };
 
 export default function PromotionsPage() {
@@ -35,6 +36,7 @@ export default function PromotionsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000';
 
+  // ... (giữ nguyên useEffect loadPromotions) ...
   useEffect(() => {
     const loadPromotions = async () => {
       try {
@@ -49,35 +51,43 @@ export default function PromotionsPage() {
       }
     };
 
-    // Debounce search
     const handler = setTimeout(() => {
       loadPromotions();
-    }, 500); // Chờ 500ms sau khi người dùng ngừng gõ
+    }, 500);
 
     return () => {
       clearTimeout(handler);
     };
   }, [searchTerm, backendUrl]);
 
-  const handleSave = async (formData: Omit<Promotion, '_id'>, id?: string) => {
+  // Cập nhật handleSave dùng dayjs
+  const handleSave = async (formData: PromotionFormData, id?: string) => {
     const isEditMode = !!id;
     const url = isEditMode ? `${backendUrl}/promotions/${id}` : `${backendUrl}/promotions`;
     const method = isEditMode ? 'PATCH' : 'POST';
 
     try {
+      // Dùng dayjs để parse và format sang ISO string chuẩn UTC
+      // .startOf('day') set về 00:00:00
+      // .endOf('day') set về 23:59:59
+      const startDate = dayjs(formData.start_date).startOf('day').toISOString();
+      const endDate = dayjs(formData.end_date).endOf('day').toISOString();
+
       const res = await apiFetch(url, {
         method: method,
         body: JSON.stringify({
-          ...formData, // Spread the original form data
-          // Ensure discount_type is uppercase as required by backend
+          ...formData,
           discount_type: formData.discount_type.toUpperCase(),
-          // Chuyển đổi ngày tháng sang định dạng ISO 8601 chuẩn UTC
-          // Thêm 'T00:00:00' để new Date() hiểu là ngày bắt đầu tại múi giờ địa phương,
-          // sau đó toISOString() sẽ chuyển sang UTC một cách chính xác.
-          start_date: new Date(formData.start_date + 'T00:00:00').toISOString(),
-          end_date: new Date(formData.end_date + 'T00:00:00').toISOString(),
+          start_date: startDate,
+          end_date: endDate,
         }),
       });
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || 'Có lỗi xảy ra');
+      }
+
       const savedPromotion = await res.json();
 
       if (isEditMode) {
@@ -91,7 +101,7 @@ export default function PromotionsPage() {
       }
     } catch (error: any) {
       const errorMessage = isEditMode ? 'Cập nhật thất bại.' : 'Tạo mới thất bại.';
-      toast.error(error.message || errorMessage);
+      toast.error(error.message ? `${errorMessage} ${error.message}` : errorMessage);
       throw error;
     }
   };
@@ -110,6 +120,7 @@ export default function PromotionsPage() {
 
   return (
     <div className="p-8 space-y-6">
+      {/* ... (giữ nguyên phần UI) ... */}
       <Toaster position="top-right" />
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-semibold text-gray-800">Quản lý Khuyến Mãi</h1>

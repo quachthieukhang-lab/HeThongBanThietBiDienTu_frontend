@@ -18,9 +18,9 @@ const PromotionTable: React.FC<PromotionTableProps> = ({ promotions, loading, on
     [DiscountType.FixedAmount]: 'Số tiền cố định (VND)',
   };
 
-  const getStatus = (startDate: string, endDate: string, isActive: boolean) => {
+  const getStatus = (startDate: Date, endDate: Date, status: boolean) => {
     const now = new Date();
-    if (!isActive) return { text: 'Vô hiệu', color: 'bg-gray-100 text-gray-700' };
+    if (!status) return { text: 'Vô hiệu', color: 'bg-gray-100 text-gray-700' };
     if (new Date(startDate) > now) return { text: 'Sắp diễn ra', color: 'bg-blue-100 text-blue-700' };
     if (new Date(endDate) < now) return { text: 'Đã kết thúc', color: 'bg-red-100 text-red-700' };
     return { text: 'Đang diễn ra', color: 'bg-green-100 text-green-700' };
@@ -47,7 +47,7 @@ const PromotionTable: React.FC<PromotionTableProps> = ({ promotions, loading, on
               <tr><td colSpan={8} className="text-center py-10 text-gray-500">Đang tải...</td></tr>
             ) : promotions.length > 0 ? (
               promotions.map((promo) => {
-                const status = getStatus(promo.start_date, promo.end_date, promo.isActive);
+                const status = getStatus(promo.start_date, promo.end_date, promo.status);
                 return (
                   <tr key={promo._id} className="hover:bg-gray-50 transition">
                     <td className="px-6 py-4 font-medium text-gray-900">{promo.name}</td>
@@ -58,7 +58,7 @@ const PromotionTable: React.FC<PromotionTableProps> = ({ promotions, loading, on
                     </td>
                     <td className="px-6 py-4 text-gray-600">{discountTypeMap[promo.discount_type]}</td>
                     <td className="px-6 py-4 font-semibold text-indigo-600">
-                      {promo.discount_type === DiscountType.Percentage
+                      {promo.discount_type.toUpperCase() === 'PERCENTAGE'
                         ? `${promo.discount_value}%`
                         : promo.discount_value.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}
                     </td>

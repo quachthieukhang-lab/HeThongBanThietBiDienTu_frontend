@@ -3,15 +3,27 @@
 import React, { useState, FormEvent } from 'react';
 import { X } from 'lucide-react';
 import { Promotion, DiscountType } from '@/app/admin/promotions/page';
-import { format } from 'date-fns';
+import dayjs from 'dayjs'; // Import dayjs
 
-interface PromotionModalProps {
-  promotion?: Promotion | null; // If provided, modal is in edit mode
-  onClose: () => void;
-  onSuccess: (data: Omit<Promotion, '_id'>, id?: string) => Promise<void>;
+export interface PromotionFormData {
+  name: string;
+  description: string;
+  discount_type: DiscountType;
+  code: string;
+  discount_value: number;
+  discount_amount: number;
+  start_date: string;
+  end_date: string;
+  status: boolean;
 }
 
-const getInitialFormData = (promotion?: Promotion | null) => {
+interface PromotionModalProps {
+  promotion?: Promotion | null;
+  onClose: () => void;
+  onSuccess: (data: PromotionFormData, id?: string) => Promise<void>;
+}
+
+const getInitialFormData = (promotion?: Promotion | null): PromotionFormData => {
   if (promotion) {
     return {
       name: promotion.name,
@@ -19,9 +31,11 @@ const getInitialFormData = (promotion?: Promotion | null) => {
       discount_type: promotion.discount_type,
       code: promotion.code,
       discount_value: promotion.discount_value,
-      start_date: format(new Date(promotion.start_date), 'yyyy-MM-dd'),
-      end_date: format(new Date(promotion.end_date), 'yyyy-MM-dd'),
-      isActive: promotion.isActive,
+      discount_amount: promotion.discount_amount,
+      // Dùng dayjs để format ngày hiển thị lên input
+      start_date: promotion.start_date ? dayjs(promotion.start_date).format('YYYY-MM-DD') : '',
+      end_date: promotion.end_date ? dayjs(promotion.end_date).format('YYYY-MM-DD') : '',
+      status: promotion.status,
     };
   }
   return {
@@ -30,17 +44,19 @@ const getInitialFormData = (promotion?: Promotion | null) => {
     discount_type: DiscountType.Percentage,
     code: '',
     discount_value: 0,
+    discount_amount: 0,
     start_date: '',
     end_date: '',
-    isActive: true,
+    status: true,
   };
 };
 
 export default function PromotionModal({ promotion, onClose, onSuccess }: PromotionModalProps) {
   const isEditMode = !!promotion;
-  const [formData, setFormData] = useState(() => getInitialFormData(promotion));
+  const [formData, setFormData] = useState<PromotionFormData>(() => getInitialFormData(promotion));
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // ... (giữ nguyên hàm handleChange) ...
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     if (type === 'checkbox') {
@@ -55,10 +71,14 @@ export default function PromotionModal({ promotion, onClose, onSuccess }: Promot
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const dataToSubmit = { ...formData, discount_value: Number(formData.discount_value) };
+      const dataToSubmit = {
+        ...formData,
+        discount_value: Number(formData.discount_value),
+        discount_amount: Number(formData.discount_amount),
+      };
       await onSuccess(dataToSubmit, promotion?._id);
     } catch (error) {
-      // Error toast is shown in the parent component
+      // Error handling is managed by parent
     } finally {
       setIsSubmitting(false);
     }
@@ -67,6 +87,7 @@ export default function PromotionModal({ promotion, onClose, onSuccess }: Promot
   return (
     <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
       <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-lg">
+        {/* ... (giữ nguyên phần giao diện Modal) ... */}
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-800">
             {isEditMode ? 'Chỉnh sửa Khuyến Mãi' : 'Tạo Khuyến Mãi Mới'}
@@ -100,6 +121,10 @@ export default function PromotionModal({ promotion, onClose, onSuccess }: Promot
               <label htmlFor="discount_value" className="block text-sm font-medium text-gray-700 mb-1">Giá trị giảm</label>
               <input type="number" name="discount_value" id="discount_value" value={formData.discount_value} onChange={handleChange} required min="0" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" />
             </div>
+            <div>
+              <label htmlFor="discount_amount" className="block text-sm font-medium text-gray-700 mb-1">Số lượng giới hạn</label>
+              <input type="number" name="discount_amount" id="discount_amount" value={formData.discount_amount} onChange={handleChange} required min="0" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" />
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -112,8 +137,8 @@ export default function PromotionModal({ promotion, onClose, onSuccess }: Promot
             </div>
           </div>
           <div className="flex items-center">
-            <input type="checkbox" name="isActive" id="isActive" checked={formData.isActive} onChange={handleChange} className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
-            <label htmlFor="isActive" className="ml-2 block text-sm text-gray-900">Kích hoạt</label>
+            <input type="checkbox" name="status" id="status" checked={formData.status} onChange={handleChange} className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
+            <label htmlFor="status" className="ml-2 block text-sm text-gray-900">Kích hoạt</label>
           </div>
           <div className="flex justify-end gap-4 pt-4">
             <button type="button" onClick={onClose} disabled={isSubmitting} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 disabled:opacity-50">Hủy</button>
