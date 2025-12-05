@@ -59,7 +59,7 @@ const { data: brandsRes } = useSWR<PaginatedResponse<BrandLite>>(
         type="text"
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
-        placeholder="🔍 Tìm kiếm sản phẩm, danh mục, thương hiệu..."
+        placeholder="Tìm kiếm sản phẩm, danh mục, thương hiệu..."
         className="w-full pl-3 pr-3 py-2 bg-white/10 border border-cyan-500/30 rounded-lg text-white placeholder-white/60 text-sm"
       />
 

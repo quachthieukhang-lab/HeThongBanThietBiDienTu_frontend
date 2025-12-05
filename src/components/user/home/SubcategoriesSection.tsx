@@ -73,7 +73,7 @@ export default function SubcategoriesSection() {
 
             return (
               <Link
-                key={uniqueKey}
+                key={index}
                 href={`/user/subcategories/${s.slug}`}
                 className="group bg-white rounded-xl p-5 flex flex-col items-center text-center border border-slate-200 shadow-xs hover:shadow-md hover:border-slate-300 transition-all duration-300 hover:-translate-y-1"
               >

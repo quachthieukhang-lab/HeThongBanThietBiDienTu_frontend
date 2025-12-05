@@ -73,7 +73,7 @@ export default function SubcategoryPage() {
       <div className="relative w-full h-64 md:h-80 lg:h-96 flex flex-col items-center justify-center bg-gradient-to-br from-blue-400 via-indigo-400 to-purple-500 rounded-xl shadow-md mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-6">
         {/* Icon hoặc Hình ảnh */}
         {(subcategory.image || subcategory.icon) && (
-          <div className="w-80 h-50 mb-4 flex items-center justify-center bg-white/30 backdrop-blur-sm shadow-lg border border-white/20 overflow-hidden rounded-xl">
+          <div className="w-60 h-60 mb-4 flex items-center justify-center bg-white/30 backdrop-blur-sm shadow-lg border border-white/20 overflow-hidden rounded-xl">
             {subcategory.image ? (
               <Image
                 src={getImageUrl(subcategory.image)}

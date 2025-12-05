@@ -56,11 +56,11 @@ export function Header() {
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("userInfo");
     localStorage.removeItem("userRole");
-    router.push("/"); // Thay thế bằng router.push
+    router.push("/auth/login"); // Thay thế bằng router.push
   };
 
   const navItems = [
-    { name: "Tất cả sản phẩm", href: "/user/products" },
+    // { name: "Tất cả sản phẩm", href: "/user/products" },
     { name: "Máy lạnh", href: "/user/subcategories/may-lanh" },
     { name: "Máy giặt", href: "/user/subcategories/may-giat" },
     { name: "Tủ lạnh", href: "/user/subcategories/tu-lanh" },
@@ -86,7 +86,7 @@ export function Header() {
           <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
               <button className="flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-3 py-2 rounded-lg hover:from-cyan-600 hover:to-blue-700 transition-all font-medium min-w-[120px] justify-center shadow-lg hover:shadow-cyan-500/25 text-sm">
-                <span>📱 Danh mục</span>
+                <span>Danh mục</span>
                 <ChevronDown size={14} />
               </button>
             </DropdownMenu.Trigger>
@@ -184,22 +184,22 @@ export function Header() {
                   {userEmail ? (
                     <>
                       <DropdownMenu.Item className="p-3 hover:bg-cyan-900/50 rounded-md cursor-pointer text-white text-sm">
-                        <Link href="/user/orders" className="w-full block">📦 Đơn hàng của tôi</Link>
+                        <Link href="/user/orders" className="w-full block">Đơn hàng của tôi</Link>
                       </DropdownMenu.Item>
                       <DropdownMenu.Item
                         className="p-3 hover:bg-cyan-900/50 rounded-md cursor-pointer text-white text-sm"
                         onSelect={handleLogout}
                       >
-                        🔓 Đăng xuất
+                        Đăng xuất
                       </DropdownMenu.Item>
                     </>
                   ) : (
                     <>
                       <DropdownMenu.Item className="p-3 hover:bg-cyan-900/50 rounded-md cursor-pointer text-white text-sm">
-                        <Link href="/auth/login" className="w-full block">🔐 Đăng nhập</Link>
+                        <Link href="/auth/login" className="w-full block">Đăng nhập</Link>
                       </DropdownMenu.Item>
                       <DropdownMenu.Item className="p-3 hover:bg-cyan-900/50 rounded-md cursor-pointer text-white text-sm">
-                        <Link href="/auth/register" className="w-full block">📝 Đăng ký</Link>
+                        <Link href="/auth/register" className="w-full block">Đăng ký</Link>
                       </DropdownMenu.Item>
                     </>
                   )}
