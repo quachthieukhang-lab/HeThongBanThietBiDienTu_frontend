@@ -7,10 +7,12 @@ import ProductList from "@/components/user/product/ProductList";
 import type { ProductLite } from "@/app/user/types/product";
 import type { SubcategoryBonus } from "@/app/user/types/category";
 import { useSlugToIdMap } from "@/app/user/hooks/useSlugtoIdMap";
+import Image from "next/image";
 import type { PaginatedResponse } from "@/app/user/types/api";
 import FAIcon from "@/components/user/home/FAIcon";
 
 export default function SubcategoryPage() {
+
   const { slug } = useParams();
   const slugStr = (Array.isArray(slug) ? slug[0] : slug)?.toLowerCase();
 
@@ -54,19 +56,35 @@ export default function SubcategoryPage() {
   if (!slugToIdMap) return <p>Đang tải danh mục...</p>;
   if (!id || !subcategory)
     return <p className="text-center mt-10 text-gray-400">Không tìm thấy danh mục này.</p>;
+  
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000'
 
+  // Hàm xử lý URL ảnh
+  const getImageUrl = (imagePath: string) => {
+    if (!imagePath) return ''
+    // Nếu đã là URL đầy đủ thì giữ nguyên
+    if (imagePath.startsWith('http')) return imagePath
+    // Nếu là đường dẫn tương đối thì thêm base URL
+    return `${backendUrl}${imagePath.startsWith('/') ? '' : '/'}${imagePath}`
+  }
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section - Đã sửa gradient và layout */}
       <div className="relative w-full h-64 md:h-80 lg:h-96 flex flex-col items-center justify-center bg-gradient-to-br from-blue-400 via-indigo-400 to-purple-500 rounded-xl shadow-md mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-6">
-        {/* Icon FontAwesome - Đã fix hiển thị icon */}
-        {subcategory.icon && (
-          <div className="w-20 h-20 mb-4 flex items-center justify-center bg-white/30 backdrop-blur-sm rounded-full shadow-lg border border-white/20">
-            {subcategory.icon ? (
-    <FAIcon icon={subcategory.icon} className="w-8 h-8 text-slate-700 group-hover:text-slate-900" />
-  ) : (
-    <div className="w-8 h-8 rounded bg-slate-200" />
-  )}
+        {/* Icon hoặc Hình ảnh */}
+        {(subcategory.image || subcategory.icon) && (
+          <div className="w-80 h-50 mb-4 flex items-center justify-center bg-white/30 backdrop-blur-sm shadow-lg border border-white/20 overflow-hidden rounded-xl">
+            {subcategory.image ? (
+              <Image
+                src={getImageUrl(subcategory.image)}
+                alt={`Hình ảnh cho ${subcategory.name}`}
+                width={1920}
+                height={1080}
+                className="object-cover w-full h-full"
+              />
+            ) : subcategory.icon ? (
+              <FAIcon icon={subcategory.icon} className="w-8 h-8 text-slate-700" />
+            ) : null}
           </div>
         )}
 

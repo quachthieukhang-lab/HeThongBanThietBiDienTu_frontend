@@ -196,10 +196,10 @@ export function Header() {
                   ) : (
                     <>
                       <DropdownMenu.Item className="p-3 hover:bg-cyan-900/50 rounded-md cursor-pointer text-white text-sm">
-                        <Link href="/auth/Login" className="w-full block">🔐 Đăng nhập</Link>
+                        <Link href="/auth/login" className="w-full block">🔐 Đăng nhập</Link>
                       </DropdownMenu.Item>
                       <DropdownMenu.Item className="p-3 hover:bg-cyan-900/50 rounded-md cursor-pointer text-white text-sm">
-                        <Link href="/auth/Register" className="w-full block">📝 Đăng ký</Link>
+                        <Link href="/auth/register" className="w-full block">📝 Đăng ký</Link>
                       </DropdownMenu.Item>
                     </>
                   )}
