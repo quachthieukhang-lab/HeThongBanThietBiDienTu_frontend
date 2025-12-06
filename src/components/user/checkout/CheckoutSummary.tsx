@@ -15,6 +15,7 @@ interface AppliedPromotion {
   name: string;
   discount_type: DiscountType;
   discount_value: number;
+  code: string;
 }
 
 interface CartData {
@@ -98,8 +99,9 @@ export default function CheckoutSummary({
         body: JSON.stringify({
           addressId,
           paymentMethod,
-          // KHÔNG gửi totalPrice nữa, để BE tự tính
-          promoCode: appliedPromotion?.name || null,
+          // Gửi promoCode lên để BE tự tính toán
+          promoCode: appliedPromotion?.code || null,
+          totalPrice: discountedTotal,
         }),
       });
 

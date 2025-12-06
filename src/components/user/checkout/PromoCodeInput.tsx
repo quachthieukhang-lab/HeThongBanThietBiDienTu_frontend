@@ -7,7 +7,7 @@ import { DiscountType } from "./CheckoutSummary";
 interface PromoCodeInputProps {
   subtotal: number;
   setDiscountedTotal: (total: number) => void;
-  setAppliedPromotion: (promo: { name: string; discount_type: DiscountType; discount_value: number } | null) => void;
+  setAppliedPromotion: (promo: { name: string; discount_type: DiscountType; discount_value: number; code: string } | null) => void;
 }
 
 export default function PromoCodeInput({ subtotal, setDiscountedTotal, setAppliedPromotion }: PromoCodeInputProps) {
@@ -32,7 +32,7 @@ export default function PromoCodeInput({ subtotal, setDiscountedTotal, setApplie
 
       const promotions = await res.json();
 
-      const promotion = promotions.find((p: any) => p.name === code);
+      const promotion = promotions.find((p: any) => p.code === code);
       if (!promotion) throw new Error("Mã giảm giá không hợp lệ hoặc hết hạn");
 
       let discountedTotal = subtotal;
@@ -45,9 +45,10 @@ export default function PromoCodeInput({ subtotal, setDiscountedTotal, setApplie
 
       setDiscountedTotal(discountedTotal);
       setAppliedPromotion({
-        name: promotion.name,
+        name: promotion.code,
         discount_type: promotion.discount_type,
         discount_value: promotion.discount_value,
+        code: promotion.code
       });
 
       toast.success(
