@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useMemo } from 'react'
+import React, { useMemo, useState, useEffect } from 'react'
 import {
   CreditCard,
   Package,
@@ -15,108 +15,44 @@ import Link from 'next/link'
 import useSWR from 'swr'
 import { apiClient } from '@/lib/apiClient'
 
-
-type Order = {
-  _id: string
-  orderNumber?: string
-  customer?: { name: string }
-  totalAmount: number
-  status: 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled'
-  createdAt: string
-}
-
-type Product = {
-  _id: string
-  name: string
-  stock: number
-  price?: number
-}
-
-type User = {
-  _id: string
-  createdAt: string
+type DashboardData = {
+  totalRevenue: number
+  ordersToday: {
+    count: number
+    pending: number
+  }
+  inventory: {
+    lowStock: number
+    totalProducts: number
+  }
+  users: {
+    total: number
+  }
+  revenueChart: {
+    date: string
+    revenue: number
+    orders: number
+  }[]
+  orderStatus: {
+    status: string
+    count: number
+  }[]
 }
 
 // Fetcher cho SWR
 const fetcher = (url: string) => apiClient(url).then(res => res.data)
 
 export default function DashboardPage() {
-  const { data: ordersData, isLoading: ordersLoading } = useSWR('/orders', fetcher)
-  const { data: productsData, isLoading: productsLoading } = useSWR('/products?limit=50', fetcher)
-  const { data: usersData, isLoading: usersLoading } = useSWR('/users', fetcher)
-
-  const isLoading = ordersLoading || productsLoading || usersLoading
-
-  const orders: Order[] = useMemo(() => {
-    if (!ordersData) return []
-    return Array.isArray(ordersData) ? ordersData : ordersData.orders || ordersData.items || []
-  }, [ordersData])
-
-  const products: Product[] = useMemo(() => {
-    if (!productsData) return []
-    return Array.isArray(productsData) ? productsData : productsData.products || productsData.items || []
-  }, [productsData])
-
-  const users: User[] = useMemo(() => {
-    if (!usersData) return []
-    return Array.isArray(usersData) ? usersData : usersData.users || usersData.items || []
-  }, [usersData])
-
-  const revenueData = useMemo(() => {
-    const last7Days = Array.from({ length: 7 }, (_, i) => {
-      const date = new Date()
-      date.setDate(date.getDate() - (6 - i))
-      return date.toISOString().split('T')[0]
-    })
-
-    return last7Days.map(date => {
-      const dayRevenue = orders
-        .filter(order => order.createdAt && order.createdAt.startsWith(date))
-        .reduce((sum, order) => sum + (order.totalAmount || 0), 0)
-
-      return {
-        date: new Date(date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }),
-        revenue: dayRevenue,
-        orders: orders.filter(order => order.createdAt && order.createdAt.startsWith(date)).length
-      }
-    })
-  }, [orders])
-
-  const statusData = useMemo(() => {
-    const statusCount = orders.reduce((acc, order) => {
-      acc[order.status] = (acc[order.status] || 0) + 1
-      return acc
-    }, {} as Record<string, number>)
-
-    return Object.entries(statusCount).map(([status, count]) => ({
-      status: mapStatusName(status),
-      count,
-      color: getStatusColor(status)
-    }))
-  }, [orders])
-
-  const totalRevenue = useMemo(() =>
-    orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0),
-    [orders]
-  )
-
-  const ordersToday = useMemo(() => {
-    const today = new Date().toISOString().split('T')[0]
-    return orders.filter(order =>
-      order.createdAt && order.createdAt.startsWith(today)
-    ).length
-  }, [orders])
-
-  const pendingOrders = useMemo(() =>
-    orders.filter(order => order.status === 'pending').length,
-    [orders]
-  )
-
-  const lowStockCount = useMemo(() =>
-    products.filter(product => product.stock <= 3).length,
-    [products]
-  )
-
+  const [dashData, setDashData] = useState<DashboardData>({
+    totalRevenue: 0,
+    ordersToday: { count: 0, pending: 0 },
+    inventory: { lowStock: 0, totalProducts: 0 },
+    users: { total: 0 },
+    revenueChart: [],
+    orderStatus: []
+  })
+  const [isLoading, setIsLoading] = useState(true)
+  // Helper functions (declare before useMemo usage)
   const mapStatusName = (status: string) => {
     const statusMap: Record<string, string> = {
       pending: 'Chờ xử lý',
@@ -142,6 +78,43 @@ export default function DashboardPage() {
   const fmtVND = (v: number) =>
     v.toLocaleString('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 })
 
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setIsLoading(true)
+        const response = await apiClient('/dashboard')
+        // apiClient returns axios response; prefer response.data
+        const payload = response?.data ?? response
+        console.log('Full Response:', response)
+        console.log('Payload:', payload)
+        if (payload) {
+          setDashData(payload)
+        }
+      } catch (error) {
+        console.error('Failed to fetch dashboard data:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchDashboardData()
+  }, [])
+
+  const revenueData = useMemo(() => {
+    return dashData.revenueChart.map(item => ({
+      ...item,
+      date: new Date(item.date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })
+    }))
+  }, [dashData.revenueChart])
+
+  const statusData = useMemo(() => {
+    return dashData.orderStatus.map(item => ({
+      status: mapStatusName(item.status),
+      count: item.count,
+      color: getStatusColor(item.status)
+    }))
+  }, [dashData.orderStatus])
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -164,46 +137,46 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500">Tổng doanh thu</p>
-              <p className="text-lg font-semibold mt-1">{fmtVND(totalRevenue)}</p>
+              <p className="text-lg font-semibold mt-1">{fmtVND(dashData.totalRevenue)}</p>
             </div>
             <div className="p-2 bg-green-50 rounded-lg">
               <DollarSign size={20} className="text-green-600" />
             </div>
           </div>
-          <p className="text-xs text-gray-400 mt-2">{orders.length} đơn hàng</p>
+          <p className="text-xs text-gray-400 mt-2">{dashData.orderStatus.reduce((sum, item) => sum + item.count, 0)} đơn hàng</p>
         </div>
 
         <div className="bg-white rounded-lg p-4 shadow border">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500">Đơn hàng hôm nay</p>
-              <p className="text-lg font-semibold mt-1">{ordersToday}</p>
+              <p className="text-lg font-semibold mt-1">{dashData.ordersToday.count}</p>
             </div>
             <div className="p-2 bg-blue-50 rounded-lg">
               <ShoppingCart size={20} className="text-blue-600" />
             </div>
           </div>
-          <p className="text-xs text-gray-400 mt-2">{pendingOrders} đang chờ xử lý</p>
+          <p className="text-xs text-gray-400 mt-2">{dashData.ordersToday.pending} đang chờ xử lý</p>
         </div>
 
         <div className="bg-white rounded-lg p-4 shadow border">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500">Sản phẩm sắp hết</p>
-              <p className="text-lg font-semibold mt-1">{lowStockCount}</p>
+              <p className="text-lg font-semibold mt-1">{dashData.inventory.lowStock}</p>
             </div>
             <div className="p-2 bg-red-50 rounded-lg">
               <Package size={20} className="text-red-600" />
             </div>
           </div>
-          <p className="text-xs text-gray-400 mt-2">Tổng {products.length} sản phẩm</p>
+          <p className="text-xs text-gray-400 mt-2">Tổng {dashData.inventory.totalProducts} sản phẩm</p>
         </div>
 
         <div className="bg-white rounded-lg p-4 shadow border">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500">Người dùng</p>
-              <p className="text-lg font-semibold mt-1">{users.length}</p>
+              <p className="text-lg font-semibold mt-1">{dashData.users.total}</p>
             </div>
             <div className="p-2 bg-purple-50 rounded-lg">
               <Users size={20} className="text-purple-600" />
@@ -239,59 +212,12 @@ export default function DashboardPage() {
               Trạng thái đơn hàng
             </h3>
             <div className="text-sm text-gray-500">
-              Tổng: {orders.length} đơn
+              Tổng: {dashData.orderStatus.reduce((sum, item) => sum + item.count, 0)} đơn
             </div>
           </div>
           <div className="h-64">
             <StatusChart data={statusData} />
           </div>
-        </div>
-      </div>
-
-      {/* Đơn hàng gần đây */}
-      <div className="bg-white rounded-lg p-4 shadow border">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-medium">Đơn hàng gần đây</h3>
-          <Link href="/admin/orders" className="text-sm text-blue-600 hover:text-blue-700">
-            Xem tất cả
-          </Link>
-        </div>
-
-        <div className="space-y-3">
-          {orders.slice(0, 5).map((order) => (
-            <div key={order._id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors">
-              <div className="flex items-center gap-3">
-                <div className="bg-blue-50 p-2 rounded">
-                  <ShoppingCart size={16} className="text-blue-600" />
-                </div>
-                <div>
-                  <p className="font-medium text-sm">
-                    {order.orderNumber || order._id}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {order.customer?.name || 'Khách hàng'}
-                  </p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="font-medium text-sm">{fmtVND(order.totalAmount || 0)}</p>
-                <p className="text-xs text-gray-500">
-                  {new Date(order.createdAt).toLocaleDateString('vi-VN')}
-                </p>
-              </div>
-              <div>
-                <span
-                  className="px-2 py-1 rounded text-xs font-semibold"
-                  style={{
-                    backgroundColor: `${getStatusColor(order.status)}20`,
-                    color: getStatusColor(order.status)
-                  }}
-                >
-                  {mapStatusName(order.status)}
-                </span>
-              </div>
-            </div>
-          ))}
         </div>
       </div>
 
@@ -337,7 +263,7 @@ export default function DashboardPage() {
 // Biểu đồ doanh thu
 function RevenueChart({ data }: { data: { date: string; revenue: number; orders: number }[] }) {
   const maxRevenue = Math.max(...data.map(d => d.revenue), 1)
-  
+
   return (
     <div className="w-full h-full flex items-end justify-between gap-2 px-4">
       {data.map((day, index) => (
@@ -369,7 +295,7 @@ function RevenueChart({ data }: { data: { date: string; revenue: number; orders:
 // Biểu đồ trạng thái đơn hàng
 function StatusChart({ data }: { data: { status: string; count: number; color: string }[] }) {
   const total = data.reduce((sum, item) => sum + item.count, 0)
-  
+
   return (
     <div className="w-full h-full flex flex-col justify-center items-center">
       <div className="relative w-48 h-48 mb-4">
@@ -378,7 +304,7 @@ function StatusChart({ data }: { data: { status: string; count: number; color: s
             const previousPercent = acc
             const percent = (item.count / total) * 100
             const dashArray = `${percent} ${100 - percent}`
-            
+
             return (
               <g key={item.status}>
                 <circle
@@ -404,7 +330,7 @@ function StatusChart({ data }: { data: { status: string; count: number; color: s
           </div>
         </div>
       </div>
-      
+
       <div className="grid grid-cols-2 gap-2 w-full max-w-xs">
         {data.map((item, index) => (
           <div key={item.status} className="flex items-center gap-2 text-xs">
