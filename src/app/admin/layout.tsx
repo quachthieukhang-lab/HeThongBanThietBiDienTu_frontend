@@ -66,7 +66,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   },[])
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <Toaster position="top-right" />
+      <Toaster/>
       {/* Sidebar */}
       <aside className="w-72 bg-gradient-to-b from-slate-800 to-cyan-700 text-white fixed top-0 left-0 h-full overflow-y-auto shadow-lg">
         <div className="p-6">

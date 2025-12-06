@@ -13,7 +13,7 @@ interface Props {
   productName: string;
 }
 
-export default function ProductReview({ reviews, total, productId, productName }: Props) {
+export default function ProductReview({ reviews, total }: Props) {
   const [currentPage, setCurrentPage] = useState(1);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const pageSize = 10;
@@ -66,12 +66,12 @@ export default function ProductReview({ reviews, total, productId, productName }
         <div className="border-b border-gray-200 pb-6">
           <div className="flex justify-between items-start mb-6">
             <h2 className="text-2xl font-bold text-gray-900">Đánh giá sản phẩm</h2>
-            <button
+            {/* <button
               onClick={() => setShowReviewForm(true)}
               className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
             >
               Viết đánh giá
-            </button>
+            </button> */}
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

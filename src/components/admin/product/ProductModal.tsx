@@ -584,8 +584,8 @@ export default function ProductModal({ open, onClose, onCreate, onUpdate, editin
                   required
                 >
                   <option value="">Chọn danh mục con</option>
-                  {filteredSubcategories.map(s => (
-                    <option key={s._id} value={s._id}>{s.name}</option>
+                  {filteredSubcategories.map((s, index)=> (
+                    <option key={index} value={s._id}>{s.name}</option>
                   ))}
                 </select>
                 {form.categoryId && filteredSubcategories.length === 0 && (

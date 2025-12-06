@@ -18,7 +18,7 @@ interface ProductListProps {
 export default function ProductList({ subcategoryId, brandId }: ProductListProps) {
   // --- 1️⃣ State quản lý phân trang ---
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 18;
+  const pageSize = 10;
 
   // --- 2️⃣ Hàm fetch dữ liệu ---
   const fetchProducts = async (): Promise<PaginatedResponse<ProductLite>> => {
@@ -86,6 +86,7 @@ export default function ProductList({ subcategoryId, brandId }: ProductListProps
               total={total}
               pageSize={pageSize}
               onChange={setCurrentPage}
+              currentPage={currentPage}
             />
           </div>
         </div>

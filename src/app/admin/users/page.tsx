@@ -199,7 +199,7 @@ export default function UsersPage() {
 
   return (
     <div className="p-8 space-y-6">
-      <Toaster position="top-right" />
+      <Toaster />
       
       {/* Header */}
       <div className="flex justify-between items-center">

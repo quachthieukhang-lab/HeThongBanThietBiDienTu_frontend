@@ -111,7 +111,7 @@ export default function ServicePackagesPage() {
 
   return (
     <div className="p-8 space-y-6">
-      <Toaster position="top-right" />
+      <Toaster />
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-semibold text-gray-800">Quản lý Gói Dịch Vụ</h1>
         <div className="flex items-center gap-3">

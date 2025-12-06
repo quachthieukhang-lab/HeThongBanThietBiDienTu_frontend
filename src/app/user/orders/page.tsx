@@ -116,7 +116,7 @@ export default function OrdersPage() {
                         <p className="text-sm text-gray-600">{item.quantity} x {item.price.toLocaleString('vi-VN')}₫</p>
                       </div>
                       <button
-                        onClick={() => setOpenReview({ productId: item.productId, orderId: order._id, productName: item.name })}
+                        onClick={(e) => { e.stopPropagation(); setOpenReview({ productId: item.productId, orderId: order._id, productName: item.name })}}
                         className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
                       >
                         Viết đánh giá

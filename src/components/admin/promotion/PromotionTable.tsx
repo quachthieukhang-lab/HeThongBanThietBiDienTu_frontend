@@ -36,6 +36,7 @@ const PromotionTable: React.FC<PromotionTableProps> = ({ promotions, loading, on
               <th className="px-6 py-4">Mã KM</th>
               <th className="px-6 py-4">Loại Giảm Giá</th>
               <th className="px-6 py-4">Giá Trị</th>
+              <th className="px-6 py-4">Số lượng</th>
               <th className="px-6 py-4">Ngày Bắt Đầu</th>
               <th className="px-6 py-4">Ngày Kết Thúc</th>
               <th className="px-6 py-4">Trạng Thái</th>
@@ -62,6 +63,7 @@ const PromotionTable: React.FC<PromotionTableProps> = ({ promotions, loading, on
                         ? `${promo.discount_value}%`
                         : promo.discount_value.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}
                     </td>
+                    <td className="px-6 py-4 font-medium text-gray-900">{promo.discount_amount}</td>
                     <td className="px-6 py-4 text-gray-600">{format(new Date(promo.start_date), 'dd/MM/yyyy')}</td>
                     <td className="px-6 py-4 text-gray-600">{format(new Date(promo.end_date), 'dd/MM/yyyy')}</td>
                     <td className="px-6 py-4">

@@ -55,7 +55,7 @@ export default function OrdersPage() {
 
     return (
         <div className="p-8 space-y-6">
-            <Toaster position="top-right" />
+            <Toaster />
 
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">

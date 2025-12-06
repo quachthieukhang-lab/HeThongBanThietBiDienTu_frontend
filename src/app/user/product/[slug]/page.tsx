@@ -1,6 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
+import { useEffect } from "react";
 import useSWR from "swr";
 import { apiClient } from "@/lib/apiClient";
 import { useSlugToIdMap } from "@/app/user/hooks/useSlugtoIdMap";
@@ -48,10 +49,15 @@ export default function ProductDetailPage() {
     isLoading: loadingRev,
     error: errorRev,
   } = useSWR<PaginatedReviews<ReviewLite>>(
-    productId ? `/reviews?productId=${productId}` : null,
+    productId ? `/reviews/product/${productId}` : null,
     (url: string) => apiClient<PaginatedReviews<ReviewLite>>(url)
   );
 
+  useEffect(() => {
+    if (reviews) {
+      console.log('Reviews data:', reviews);
+    }
+  }, [reviews]);
   // --- 🌀 Trạng thái tải ---
   if (loadingMap || loadingProd || loadingVar)
     return <p className="text-center mt-10 text-gray-500">Đang tải dữ liệu...</p>;
@@ -77,13 +83,15 @@ export default function ProductDetailPage() {
     <div className="max-w-7xl mx-auto space-y-8 bg-gray-50 min-h-screen py-8 px-4">
       <ProductMainInfo product={product} variants={variants || []} />
       <ProductSpecs product={product} variants={variants || []} />
+      
       {loadingRev ? (
         <div className="text-center text-gray-500">Đang tải đánh giá...</div>
       ) : (
         <ProductReview
+          productId={product._id}
+          productName={product.name}
           reviews={reviews?.items || []}
           total={reviews?.total ?? 0}
-          limit={3}
         />
       )}
     </div>

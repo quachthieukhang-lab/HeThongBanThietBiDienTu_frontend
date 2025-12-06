@@ -77,7 +77,7 @@ export default function BrandsPage() {
 
   return (
     <div className="p-8 space-y-6">
-      <Toaster position="top-right" />
+      <Toaster />
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-semibold text-gray-800">Quản lý thương hiệu</h1>
 

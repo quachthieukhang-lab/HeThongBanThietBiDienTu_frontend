@@ -121,7 +121,7 @@ export default function PromotionsPage() {
   return (
     <div className="p-8 space-y-6">
       {/* ... (giữ nguyên phần UI) ... */}
-      <Toaster position="top-right" />
+      <Toaster />
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-semibold text-gray-800">Quản lý Khuyến Mãi</h1>
         <div className="flex items-center gap-3">
