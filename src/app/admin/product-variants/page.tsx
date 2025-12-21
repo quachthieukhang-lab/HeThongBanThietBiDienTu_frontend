@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, Suspense } from 'react' // Thêm Suspense
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Plus, Search, Filter } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -24,7 +24,8 @@ interface ProductVariant {
   updatedAt: string
 }
 
-export default function ProductVariantsPage() {
+// 1. Đổi tên component chính hiện tại thành ProductVariantsContent
+function ProductVariantsContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000'
@@ -87,54 +88,49 @@ export default function ProductVariantsPage() {
     fetchVariants()
   }, [filters])
 
-  const handleCreate = async (data: any) => {
-    try {
-      const res = await apiFetch(`${backendUrl}/product-variants`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      })
 
-      if (!res.ok) {
+    const handleCreate = async (data: FormData) => {
+    try {
+        const res = await apiFetch(`${backendUrl}/product-variants`, {
+        method: 'POST',
+        body: data,
+        })
+
+        if (!res.ok) {
         const error = await res.json()
         throw new Error(error.message || 'Failed to create variant')
-      }
+        }
 
-      toast.success('Tạo biến thể thành công')
-      setModalOpen(false)
-      fetchVariants()
+        toast.success('Tạo biến thể thành công')
+        setModalOpen(false)
+        fetchVariants()
     } catch (err: any) {
-      console.error('Create variant error:', err)
-      toast.error(err?.message || 'Lỗi khi tạo biến thể')
+        console.error('Create variant error:', err)
+        toast.error(err?.message || 'Lỗi khi tạo biến thể')
     }
-  }
+    }
 
-  const handleUpdate = async (id: string, data: any) => {
+    const handleUpdate = async (id: string, data: FormData) => {
     try {
-      const res = await apiFetch(`${backendUrl}/product-variants/${id}`, {
+        const res = await apiFetch(`${backendUrl}/product-variants/${id}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      })
+        body: data,
+        })
 
-      if (!res.ok) {
+        if (!res.ok) {
         const error = await res.json()
         throw new Error(error.message || 'Failed to update variant')
-      }
+        }
 
-      toast.success('Cập nhật biến thể thành công')
-      setModalOpen(false)
-      setEditingVariant(null)
-      fetchVariants()
+        toast.success('Cập nhật biến thể thành công')
+        setModalOpen(false)
+        setEditingVariant(null)
+        fetchVariants()
     } catch (err: any) {
-      console.error('Update variant error:', err)
-      toast.error(err?.message || 'Lỗi khi cập nhật biến thể')
+        console.error('Update variant error:', err)
+        toast.error(err?.message || 'Lỗi khi cập nhật biến thể')
     }
-  }
+    }
 
   const handleToggleActive = async (id: string, isActive: boolean) => {
     try {
@@ -297,5 +293,15 @@ export default function ProductVariantsPage() {
         editing={editingVariant}
       />
     </div>
+  )
+}
+
+// 2. Tạo component chính export default và bọc Suspense
+export default function ProductVariantsPage() {
+  return (
+    // Fallback UI sẽ hiển thị trong khi các tham số URL đang tải
+    <Suspense fallback={<div className="p-6">Đang tải dữ liệu...</div>}>
+      <ProductVariantsContent />
+    </Suspense>
   )
 }

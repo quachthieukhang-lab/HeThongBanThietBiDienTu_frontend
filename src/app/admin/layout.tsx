@@ -15,31 +15,64 @@ interface AdminLayoutProps {
 interface User {
   name: string;
   email: string;
-  
-  // Bạn có thể thêm các thuộc tính khác ở đây
+  // Thêm các thuộc tính khác nếu cần
 }
 
-// Define the fetcher function for the logout mutation
+// Hàm fetcher cho logout
+async function logoutFetcher(url: string, { arg }: { arg: { refreshToken: string | null } }) {
+  const res = await fetch(`http://localhost:3000${url}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refreshToken: arg.refreshToken }),
+  })
+
+  if (!res.ok) {
+    const errorInfo = await res.json().catch(() => ({ message: 'An unknown error occurred during logout.' }))
+    throw new Error(errorInfo.message || 'Logout failed')
+  }
+
+  return res.json()
+}
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname()
   const router = useRouter()
   const [openCategoryMenu, setOpenCategoryMenu] = useState(false)
-  const [user, setUser] = useState<User | null>(() => {
-    const userInfoString = localStorage.getItem("userInfo");
-    if (userInfoString) {
-      try {
-        return JSON.parse(userInfoString) as User;
-      } catch (e) { console.error("Failed to parse user info", e); return null }
+  
+  // SỬA 1: Khởi tạo state là null trước để an toàn khi render server
+  const [user, setUser] = useState<User | null>(null)
+
+  const { trigger: logoutTrigger } = useSWRMutation('/auth/logout', logoutFetcher)
+
+  // SỬA 2: Lấy dữ liệu từ localStorage bên trong useEffect
+  useEffect(() => {
+    // Kiểm tra window để chắc chắn code chạy ở client
+    if (typeof window !== 'undefined') {
+      const userInfoString = localStorage.getItem("userInfo");
+      if (userInfoString) {
+        try {
+          setUser(JSON.parse(userInfoString) as User);
+        } catch (e) { 
+          console.error("Failed to parse user info", e); 
+        }
+      }
     }
-    return null;
-  })
+  }, [])
+
   const handleLogout = async () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("userInfo");
-    localStorage.removeItem("userRole");
-    router.push("/auth/login"); // Thay thế bằng router.push
+    const refreshToken = localStorage.getItem('refresh_token')
+    try {
+      await logoutTrigger({ refreshToken })
+      toast.success('Đăng xuất thành công!')
+    } catch (error) {
+      console.error(error)
+      // Vẫn xóa token ngay cả khi API lỗi để user thoát được
+    }
+    localStorage.removeItem('access_token')
+    localStorage.removeItem('refresh_token')
+    localStorage.removeItem('userInfo')
+    localStorage.removeItem('userRole')
+    router.push('/auth/login') 
   }
   
   const links = [
@@ -61,14 +94,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { label: 'Đánh Giá', href: '/admin/reviews', icon: <Star size={18} /> },
     { label: 'Khuyến Mãi', href: '/admin/promotions', icon: <Gift size={18} /> },
   ]
-  useEffect(() => {
-    console.log(user)
-  },[])
+
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <Toaster/>
+      <Toaster position="top-right" />
       {/* Sidebar */}
-      <aside className="w-72 bg-gradient-to-b from-slate-800 to-cyan-700 text-white fixed top-0 left-0 h-full overflow-y-auto shadow-lg">
+      <aside className="w-72 bg-gradient-to-b from-slate-800 to-cyan-700 text-white fixed top-0 left-0 h-full overflow-y-auto shadow-lg z-50">
         <div className="p-6">
           <h2 className="text-2xl font-bold mb-10">Quản Trị Viên</h2>
 
@@ -90,7 +121,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
             {links.slice(1).map(link => (
               <div key={link.href}>
-                {/* Nếu có submenu */}
                 {link.sub ? (
                   <>
                     <div
@@ -142,12 +172,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
           <div className="mt-10 border-t border-white/20 pt-6">
             <div className="flex items-center gap-3">
-              <Avatar className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-                <AvatarFallback>NH</AvatarFallback>
+              <Avatar className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center overflow-hidden">
+                <AvatarFallback className="text-white font-medium">NH</AvatarFallback>
               </Avatar>
               <div>
                 <p className="text-sm font-medium">{user?.name ?? 'Admin'}</p>
-                <p className="text-xs text-gray-200">{user?.email}</p>
+                <p className="text-xs text-gray-200 truncate w-32" title={user?.email}>{user?.email}</p>
               </div>
             </div>
             <button onClick={handleLogout} className="mt-4 w-full text-left text-sm text-gray-200 hover:text-white transition">
