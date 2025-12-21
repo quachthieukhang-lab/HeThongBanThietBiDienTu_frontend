@@ -20,7 +20,8 @@ interface User {
 
 // Hàm fetcher cho logout
 async function logoutFetcher(url: string, { arg }: { arg: { refreshToken: string | null } }) {
-  const res = await fetch(`http://localhost:3000${url}`, {
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000'
+  const res = await fetch(`${backendUrl}${url}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ refreshToken: arg.refreshToken }),

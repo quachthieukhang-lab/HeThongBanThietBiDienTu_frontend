@@ -6,6 +6,7 @@ import { useWishlist } from "@/app/user/hooks/useWishList";
 import type { ProductLite } from "@/app/user/types/product";
 
 export default function ProductCard({ product }: { product: ProductLite }) {
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000';
   const { name, slug, thumbnail, priceFrom, priceTo, _id } = product;
   const { toggleWishlist, isInWishlist } = useWishlist();
 
@@ -39,7 +40,7 @@ export default function ProductCard({ product }: { product: ProductLite }) {
       >
         {thumbnail && (
           <Image
-            src={`http://localhost:3000/${thumbnail}`}
+            src={thumbnail.startsWith('http') ? thumbnail : `${backendUrl}/${thumbnail}`}
             alt={name}
             fill
             className="object-cover group-hover:scale-105 transition duration-300"

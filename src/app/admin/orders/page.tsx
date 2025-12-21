@@ -22,7 +22,8 @@ export default function OrdersPage() {
     const [orders, setOrders] = useState<any[]>([]);
     const [search, setSearch] = useState('');
     const [editingOrder, setEditingOrder] = useState<any>(null);
-    const { data, error, isLoading } = useSWR('http://localhost:3000/orders', fetcher)
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000';
+    const { data, error, isLoading } = useSWR(`${backendUrl}/orders`, fetcher)
     if(data){
         
     }

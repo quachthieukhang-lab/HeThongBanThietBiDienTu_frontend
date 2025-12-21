@@ -53,10 +53,11 @@ export default function ProductMainInfo({ product, variants }: Props) {
 
   // Format đường dẫn ảnh - GIỐNG NHƯ PRODUCTCARD
   const formatImageUrl = (img: string) => {
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000';
     if (!img) return null;
     if (img.startsWith('http')) return img;
-    if (img.startsWith('/')) return `http://localhost:3000${img}`;
-    return `http://localhost:3000/${img}`;
+    if (img.startsWith('/')) return `${backendUrl}${img}`;
+    return `${backendUrl}/${img}`;
   };
 
   // SỬA: Dùng product.thumbnail thay vì thumbnail

@@ -1,6 +1,6 @@
 
 export async function apiFetch(url: string, options: RequestInit = {}) {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
+  const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000'
   const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`
 
   let token = null

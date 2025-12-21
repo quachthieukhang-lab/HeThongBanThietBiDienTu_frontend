@@ -62,7 +62,9 @@ export default function LoginPage() {
 
   try {
     // 1) LOGIN
-    const res = await fetch('http://localhost:3000/auth/login', { 
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000'
+    console.log("Backend URL:", backendUrl);
+    const res = await fetch(`${backendUrl}/auth/login`, { 
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -82,7 +84,7 @@ export default function LoginPage() {
     localStorage.setItem("refreshToken", data.refreshToken);
 
     // 3) Lấy userInfo
-    const userRes = await fetch("http://localhost:3000/auth/me", {
+    const userRes = await fetch(`${backendUrl}/auth/me`, {
       headers: { Authorization: `Bearer ${data.accessToken}` }
     });
 
@@ -93,7 +95,7 @@ export default function LoginPage() {
     // 4) MERGE CART (CHỈ GỬI sessionId)
     const sid = sessionStorage.getItem("cartSessionId");
     if (sid) {
-      await fetch("http://localhost:3000/carts/merge", {
+      await fetch(`${backendUrl}/carts/merge`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",

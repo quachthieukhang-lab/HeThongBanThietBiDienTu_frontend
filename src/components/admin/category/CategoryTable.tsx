@@ -4,7 +4,7 @@ import Image from 'next/image'
 import { Pencil, Trash2, Power, PowerOff } from 'lucide-react'
 
 export default function CategoryTable({ items = [], loading = false, onEdit, onDeactivate, onActivate, onHardDelete }: any) {
-  const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000'
 
   return (
     <div className="w-full rounded-lg shadow border border-gray-200 bg-white overflow-hidden">

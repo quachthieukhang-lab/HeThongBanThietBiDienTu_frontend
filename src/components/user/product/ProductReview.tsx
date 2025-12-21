@@ -116,7 +116,7 @@ export default function ProductReview({ reviews, total }: Props) {
         ) : (
           <div className="space-y-6">
             {displayedReviews.map((review) => {
-              const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+              const apiBase = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000";
               
               return (
                 <div key={review._id} className="border-b border-gray-100 pb-6 last:border-0">

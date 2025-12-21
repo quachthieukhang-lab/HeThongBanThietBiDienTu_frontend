@@ -26,7 +26,7 @@ export async function apiClient<T>(
     return await mockFn();
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+  const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000";
   const url = path.startsWith("http") ? path : `${baseUrl}${path}`;
 
   try {

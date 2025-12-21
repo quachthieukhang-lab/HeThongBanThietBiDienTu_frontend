@@ -178,7 +178,8 @@ export default function OrdersPage() {
               review.images.forEach(img => formData.append("images", img));
 
               // Gửi trực tiếp tới BE NestJS
-              const res = await fetch("http://localhost:3000/reviews", { // đổi URL theo BE
+              const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000';
+              const res = await fetch(`${backendUrl}/reviews`, { // đổi URL theo BE
                 method: "POST",
                 body: formData,
                 headers: {
