@@ -250,7 +250,7 @@ export default function RegisterPage() {
           <div className="mt-6 text-center">
             <p className="text-gray-600 text-sm">
               Đã có tài khoản?{' '}
-              <Link href="/auth/Login" className="text-blue-600 hover:text-blue-500 font-semibold transition-colors">
+              <Link href="/auth/login" className="text-blue-600 hover:text-blue-500 font-semibold transition-colors">
                 Đăng nhập ngay
               </Link>
             </p>
