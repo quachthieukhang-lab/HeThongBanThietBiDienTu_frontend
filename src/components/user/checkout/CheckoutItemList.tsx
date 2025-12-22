@@ -13,6 +13,7 @@ export default function CheckoutItemList({ userId }: { userId?: string }) {
       </div>
     );
   }
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000";
 
   return (
     <div className="space-y-4">
@@ -27,7 +28,7 @@ export default function CheckoutItemList({ userId }: { userId?: string }) {
           <Image
             src={
               item.thumbnail
-                ? `http://localhost:3000/${item.thumbnail}`
+                ? `${backendUrl}/${item.thumbnail}`
                 : "/placeholder.png"
             }
             alt={item.name}

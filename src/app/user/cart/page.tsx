@@ -10,7 +10,7 @@ export default function CartPage() {
   const { cart, fetchCart, setItemQty, removeItem, sessionId } = useCart();
 
   const [loading, setLoading] = useState(true);
-  const API_BASE = "http://localhost:3000";
+  const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000";
 
   useEffect(() => {
     let mounted = true;
