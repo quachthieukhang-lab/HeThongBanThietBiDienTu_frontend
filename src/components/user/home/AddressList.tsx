@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { MapPin, ChevronDown, Plus, Check, Edit2, Trash2, Star } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import toast from "react-hot-toast";
+import constants from "constants";
 
 interface Address {
   _id: string;
@@ -61,7 +62,8 @@ export default function AddressSelector({ onSelect }: AddressSelectorProps) {
   const fetchAddresses = async () => {
   try {
     const token = localStorage.getItem("accessToken");
-    const res = await fetch("http://localhost:3000/addresses/me", {
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000";
+    const res = await fetch(`${backendUrl}/addresses/me`, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
@@ -89,7 +91,8 @@ export default function AddressSelector({ onSelect }: AddressSelectorProps) {
   const handleSetDefault = async (addressId: string) => {
     try {
       const token = localStorage.getItem("accessToken");
-      const res = await fetch(`http://localhost:3000/addresses/${addressId}/set-default`, {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000";
+      const res = await fetch(`${backendUrl}/addresses/${addressId}/set-default`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -115,10 +118,10 @@ export default function AddressSelector({ onSelect }: AddressSelectorProps) {
     // Giải mã token để lấy userId (nếu token là JWT)
     const payload = JSON.parse(atob(token.split('.')[1]));
     const userId = payload.sub;
-
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000";
     const url = editingAddress 
-      ? `http://localhost:3000/addresses/${editingAddress._id}`
-      : 'http://localhost:3000/addresses';
+      ? `${backendUrl}/addresses/${editingAddress._id}`
+      : `${backendUrl}/addresses`;
 
     const method = editingAddress ? "PATCH" : "POST";
 
@@ -176,7 +179,8 @@ export default function AddressSelector({ onSelect }: AddressSelectorProps) {
 
     try {
       const token = localStorage.getItem("accessToken");
-      const res = await fetch(`http://localhost:3000/addresses/${addressId}`, {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000";
+      const res = await fetch(`${backendUrl}/addresses/${addressId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,

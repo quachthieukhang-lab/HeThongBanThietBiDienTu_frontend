@@ -7,8 +7,8 @@ export async function sendChatMessage(message: string) {
     if (!token) {
       throw new Error("Vui lòng đăng nhập để sử dụng chat");
     }
-
-    const res = await fetch("http://localhost:3000/chat", {
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000";
+    const res = await fetch(`${backendUrl}/chat`, {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",

@@ -46,8 +46,9 @@ export default function CheckoutSummary({
       if (!token || !sid) return;
       
       try {
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000";
         const res = await fetch(
-          `http://localhost:3000/carts/me?sessionId=${sid}`,
+          `${backendUrl}/carts/me?sessionId=${sid}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -90,7 +91,8 @@ export default function CheckoutSummary({
       const token = localStorage.getItem("accessToken");
 
       // Gửi lên BE để BE tự tính toán lại
-      const res = await fetch("http://localhost:3000/orders", {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000";
+      const res = await fetch(`${backendUrl}/orders`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

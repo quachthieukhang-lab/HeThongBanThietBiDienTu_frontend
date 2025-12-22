@@ -10,7 +10,7 @@ export function useCart() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [sessionId, setSessionId] = useState<string>("");
 
-  const API_BASE = "http://localhost:3000";
+  const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000";
 
   // Zustand store
   const setCartCount = useCartStore((state) => state.setCartCount);

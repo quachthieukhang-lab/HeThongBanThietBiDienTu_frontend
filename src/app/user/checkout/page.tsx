@@ -23,9 +23,9 @@ export default function CheckoutPage() {
     if (!token) return;
 
     const sid = sessionStorage.getItem("cartSessionId");
-
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000";
     const res = await fetch(
-      `http://localhost:3000/carts/me?sessionId=${sid}`,
+      `${backendUrl}/carts/me?sessionId=${sid}`,
       {
         headers: { Authorization: `Bearer ${token}` },
       }

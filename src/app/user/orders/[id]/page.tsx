@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import toast from "react-hot-toast";
 import { Order, OrderItem } from "@/app/user/hooks/useOrders";
 
-const API_BASE = "http://localhost:3000";
+const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000";
 
 export default function OrderDetailPage() {
   const params = useParams();

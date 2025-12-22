@@ -23,8 +23,8 @@ export default function PromoCodeInput({ subtotal, setDiscountedTotal, setApplie
     setLoading(true);
     try {
       const token = localStorage.getItem("accessToken");
-
-      const res = await fetch("http://localhost:3000/promotions", {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000";
+      const res = await fetch(`${backendUrl}/promotions`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
