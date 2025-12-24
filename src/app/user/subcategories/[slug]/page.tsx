@@ -55,7 +55,7 @@ export default function SubcategoryPage() {
 
   if (!slugToIdMap) return <p>Đang tải danh mục...</p>;
   if (!id || !subcategory)
-    return <p className="text-center mt-10 text-gray-400">Không tìm thấy danh mục này.</p>;
+    return <p className="text-center mt-10 text-gray-400">Vui lòng chờ trong giây lát...</p>;
   
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000'
 

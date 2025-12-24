@@ -23,7 +23,7 @@ export default function BrandList() {
   const { data, error, isValidating } = useSWR<PaginatedBrands>("/brands", fetchBrands);
   const brands = data?.items ?? [];
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000";
-  if (error) return <p className="text-red-500 text-center mt-4">Không thể tải danh mục hãng.</p>
+  if (error) return <p className="text-red-500 text-center mt-4">Vui lòng chờ trong giây lát và tải lại trang</p>
   if (!brands && isValidating) return <p className="text-gray-500 text-center mt-4">Đang tải...</p>
 
   return (

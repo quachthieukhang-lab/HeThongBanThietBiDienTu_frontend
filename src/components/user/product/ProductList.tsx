@@ -38,7 +38,7 @@ export default function ProductList({ subcategoryId, brandId }: ProductListProps
 
 
   // --- 4️⃣ Xử lý trạng thái ---
-  if (error) return <p className="text-red-500 text-center mt-4">Không thể tải sản phẩm.</p>;
+  if (error) return <p className="text-red-500 text-center mt-4">Vui lòng chờ trong giây lát và tải lại trang</p>;
   if (isLoading) return <p className="text-gray-500 text-center mt-4">Đang tải dữ liệu sản phẩm...</p>;
 
   if (products.length === 0)
